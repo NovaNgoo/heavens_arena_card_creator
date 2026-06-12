@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Heaven's Arena — Card Creator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0b09;--surf:#161410;--surf2:#1d1b17;--bord:#2e2a22;--bord2:#3d3828;
+  --gold:#c9921a;--gold-lt:#f0c060;--gold-dk:#6b4a08;
+  --text:#ede3c8;--muted:#7a7060;--muted2:#554e3e;
+  --radius:8px;
+  --CW:260px;--CH:364px;
+  --art-h:121px;
+  --frame-h:243px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;min-height:100vh;display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+header{background:var(--surf);border-bottom:1px solid var(--bord);padding:12px 24px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+header h1{font-family:'Cinzel',serif;font-size:18px;color:var(--gold-lt);letter-spacing:.06em}
+header span{font-size:11px;color:var(--muted)}
+.app{display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 49px);overflow:hidden}
+
+/* ── PANEL ── */
+.panel{background:var(--surf);border-right:1px solid var(--bord);display:flex;flex-direction:column;overflow:hidden}
+.ptabs{display:flex;border-bottom:1px solid var(--bord);flex-shrink:0}
+.ptab{flex:1;padding:9px 4px;font-size:11px;font-weight:500;color:var(--muted);cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;transition:all .14s;font-family:'Inter',sans-serif}
+.ptab.on{color:var(--gold-lt);border-bottom-color:var(--gold);background:var(--surf2)}
+.ptab:hover:not(.on){color:var(--text);background:var(--surf2)}
+.pbody{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+
+/* ── FIELDS ── */
+.fl{display:flex;flex-direction:column;gap:4px}
+.fl label{font-size:10.5px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.fl input,.fl select,.fl textarea{background:var(--surf2);border:1px solid var(--bord);color:var(--text);border-radius:6px;padding:7px 9px;font-size:12.5px;font-family:'Inter',sans-serif;transition:border-color .14s;width:100%}
+.fl input:focus,.fl select:focus,.fl textarea:focus{outline:none;border-color:var(--gold)}
+.fl textarea{resize:vertical;min-height:70px;line-height:1.55}
+.fl select option{background:#1d1b17}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.hint{font-size:11px;color:var(--muted);line-height:1.4;padding:6px 8px;background:var(--surf2);border-radius:4px;border-left:2px solid var(--gold-dk)}
+
+/* ── ART ZONE ── */
+.art-zone{border:2px dashed var(--bord2);border-radius:6px;padding:18px 12px;text-align:center;cursor:pointer;position:relative;overflow:hidden;transition:border-color .2s,background .2s}
+.art-zone:hover{border-color:var(--gold);background:var(--surf2)}
+.art-zone.has-img{border-style:solid;border-color:var(--gold);padding:0}
+.art-zone.has-img img.prev{width:100%;height:130px;object-fit:cover;display:block;border-radius:4px}
+.art-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.art-zone .az-icon{font-size:24px;color:var(--bord2);display:block;margin-bottom:4px}
+.art-zone .az-txt{font-size:12px;color:var(--muted)}
+
+/* ── MANA BUILDER ── */
+.mana-builder{display:flex;flex-direction:column;gap:8px}
+.mana-row{display:grid;grid-template-columns:80px 1fr auto;gap:6px;align-items:center}
+.mana-row input[type=number]{width:100%;padding:6px 8px;font-size:12px}
+.mana-row select{padding:6px 8px;font-size:12px}
+.mana-del{background:none;border:1px solid var(--bord);color:var(--muted);border-radius:4px;width:28px;height:30px;cursor:pointer;font-size:13px}
+.mana-del:hover{border-color:#A32D2D;color:#f09595}
+.mana-preview{display:flex;flex-wrap:wrap;gap:4px;min-height:28px;padding:4px 0}
+.mpip{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;border:1.5px solid;flex-shrink:0}
+
+/* ── KEYWORD CHIPS ── */
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.chip{font-size:11px;padding:3px 8px;border-radius:20px;background:var(--surf2);border:1px solid var(--bord);color:var(--muted);cursor:pointer;transition:all .12s}
+.chip:hover{border-color:var(--gold);color:var(--gold-lt)}
+
+/* ── BUTTONS ── */
+.btn{padding:8px 16px;border-radius:6px;font-size:12.5px;font-weight:500;cursor:pointer;border:1px solid;transition:all .14s;font-family:'Inter',sans-serif}
+.btn-gold{background:var(--gold);border-color:var(--gold);color:#1a0e00}
+.btn-gold:hover{background:var(--gold-lt)}
+.btn-out{background:transparent;border-color:var(--bord);color:var(--text)}
+.btn-out:hover{border-color:var(--gold);color:var(--gold-lt)}
+.brow{display:flex;gap:7px}
+
+/* ── PRAYER ROWS ── */
+.pray-row{display:grid;grid-template-columns:1fr auto;gap:5px;align-items:center}
+.pray-row input{font-size:11.5px;padding:6px 8px}
+.pray-del{background:none;border:1px solid var(--bord);color:var(--muted);border-radius:4px;width:26px;height:28px;cursor:pointer;font-size:12px}
+.pray-del:hover{border-color:#A32D2D;color:#f09595}
+
+/* ── QUICK FORMAT ── */
+.qf-code{background:var(--surf2);border:1px solid var(--bord);border-radius:6px;padding:10px 12px;font-family:'Courier New',monospace;font-size:11px;color:var(--gold-lt);line-height:1.9}
+.qf-in{width:100%;background:var(--surf2);border:1px solid var(--bord);color:var(--text);border-radius:6px;padding:8px 10px;font-size:11.5px;font-family:'Courier New',monospace;min-height:200px;resize:vertical;line-height:1.7}
+.qf-in:focus{outline:none;border-color:var(--gold)}
+
+/* ── GALLERY ── */
+.gal{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.gal-item{position:relative;cursor:pointer}
+.gal-item canvas{border-radius:7px;box-shadow:0 4px 18px rgba(0,0,0,.6);transition:transform .15s}
+.gal-item:hover canvas{transform:translateY(-3px)}
+.gal-del{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.8);border:none;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;display:none;align-items:center;justify-content:center}
+.gal-item:hover .gal-del{display:flex}
+.empty-gal{text-align:center;color:var(--muted);font-size:12px;padding:32px;line-height:1.7}
+
+/* ── PREVIEW AREA ── */
+.preview{display:flex;flex-direction:column;align-items:center;padding:28px 20px;gap:20px;overflow-y:auto;background:var(--bg)}
+.prev-label{font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;align-self:flex-start}
+canvas.main-card{border-radius:13px;box-shadow:0 10px 48px rgba(0,0,0,.8)}
+.export-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--surf);border:1px solid var(--bord);border-radius:var(--radius);width:100%;max-width:420px}
+.export-bar span{font-size:11.5px;color:var(--muted);flex:1}
+.sec-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+</style>
+</head>
+<body>
+
+<header>
+  <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+    <polygon points="13,2 16,9.5 24,9.5 18,14.5 20,22 13,17.5 6,22 8,14.5 2,9.5 10,9.5" fill="#c9921a" opacity=".18"/>
+    <polygon points="13,2 16,9.5 24,9.5 18,14.5 20,22 13,17.5 6,22 8,14.5 2,9.5 10,9.5" fill="none" stroke="#c9921a" stroke-width="1.2"/>
+  </svg>
+  <h1>Heaven's Arena</h1>
+  <span>Card Creator</span>
+</header>
+
+<div class="app">
+<!-- ═══════════ LEFT PANEL ═══════════ -->
+<div class="panel">
+  <div class="ptabs">
+    <button class="ptab on" onclick="switchTab('form',this)">Form</button>
+    <button class="ptab" onclick="switchTab('quick',this)">Quick-type</button>
+    <button class="ptab" onclick="switchTab('gallery',this)">Gallery</button>
+  </div>
+
+  <!-- ── FORM TAB ── -->
+  <div id="tab-form" class="pbody">
+
+    <div class="fl">
+      <label>Card art</label>
+      <div class="art-zone" id="az1">
+        <input type="file" accept="image/*" onchange="loadArt(this)"/>
+        <span class="az-icon">🖼</span>
+        <span class="az-txt">Click or drag image · PNG JPG WEBP</span>
+      </div>
+    </div>
+
+    <div class="fl">
+      <label>Card type</label>
+      <select id="fType" onchange="onTypeChange()">
+        <option value="creature">Creature</option>
+        <option value="blessed">Blessed Creature</option>
+        <option value="spell">Spell</option>
+        <option value="relic">Relic</option>
+        <option value="terrain">Terrain</option>
+        <option value="god">God</option>
+      </select>
+    </div>
+
+    <div class="r2">
+      <div class="fl"><label>Name</label><input id="fName" type="text" placeholder="Titan of Cinders" oninput="render()"/></div>
+      <div class="fl"><label>Subtype</label><input id="fSub" type="text" placeholder="Colossus" oninput="render()"/></div>
+    </div>
+
+    <!-- COLOR (single for most, dual for god) -->
+    <div id="colorSingle">
+      <div class="fl"><label>Element color</label>
+        <select id="fColor" onchange="render()">
+          <option value="fire">🔥 Fire</option>
+          <option value="water">💧 Water</option>
+          <option value="earth">🌿 Earth</option>
+          <option value="thunder">⚡ Thunder</option>
+          <option value="light">✨ Light</option>
+          <option value="dark">🌑 Dark</option>
+          <option value="mind">🔮 Mind</option>
+          <option value="undead">💀 Undead</option>
+        </select>
+      </div>
+    </div>
+    <div id="colorDual" style="display:none">
+      <div class="r2">
+        <div class="fl"><label>Primary color</label>
+          <select id="fColor1" onchange="render()">
+            <option value="fire">🔥 Fire</option><option value="water">💧 Water</option>
+            <option value="earth">🌿 Earth</option><option value="thunder">⚡ Thunder</option>
+            <option value="light">✨ Light</option><option value="dark">🌑 Dark</option>
+            <option value="mind">🔮 Mind</option><option value="undead">💀 Undead</option>
+          </select>
+        </div>
+        <div class="fl"><label>Secondary color</label>
+          <select id="fColor2" onchange="render()">
+            <option value="light">✨ Light</option><option value="fire">🔥 Fire</option>
+            <option value="water">💧 Water</option><option value="earth">🌿 Earth</option>
+            <option value="thunder">⚡ Thunder</option><option value="dark">🌑 Dark</option>
+            <option value="mind">🔮 Mind</option><option value="undead">💀 Undead</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- MANA COST BUILDER -->
+    <div id="manaCostBlock">
+      <div class="fl">
+        <label>Mana cost</label>
+        <div class="hint">Add mana pips: choose the amount and color type for each group.</div>
+        <div class="mana-preview" id="manaPreview"></div>
+        <div class="mana-builder" id="manaBuilder"></div>
+        <button class="btn btn-out" style="margin-top:6px;font-size:11.5px;padding:6px 10px" onclick="addManaRow()">+ Add mana group</button>
+      </div>
+    </div>
+
+    <!-- CREATURE STATS -->
+    <div id="statBlock">
+      <div class="r3">
+        <div class="fl"><label>ATK</label><input id="fAtk" type="number" value="4" min="0" max="30" oninput="render()"/></div>
+        <div class="fl"><label>HP</label><input id="fHp" type="number" value="8" min="0" max="30" oninput="render()"/></div>
+        <div class="fl"><label>MOV</label><input id="fMov" type="number" value="2" min="1" max="8" oninput="render()"/></div>
+      </div>
+      <div class="r2" style="margin-top:8px">
+        <div class="fl"><label>Level</label>
+          <select id="fLevel" onchange="render()">
+            <option>1</option><option>2</option><option>3</option>
+          </select>
+        </div>
+        <div class="fl"><label>Creature type</label>
+          <select id="fCreatureType" onchange="render()">
+            <option value="warrior">Warrior</option><option value="colossus">Colossus</option>
+            <option value="magistus">Magistus</option><option value="duelist">Duelist</option>
+            <option value="assassin">Assassin</option><option value="guardian">Guardian</option>
+            <option value="archer">Archer</option><option value="beast">Beast</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLESSING (blessed only) -->
+    <div id="blessBlock" style="display:none">
+      <div class="r2">
+        <div class="fl"><label>Blessing</label><input id="fBlessNow" type="number" value="0" min="0" max="10" oninput="render()"/></div>
+        <div class="fl"><label>Blessing max</label><input id="fBlessMax" type="number" value="5" min="1" max="10" oninput="render()"/></div>
+      </div>
+    </div>
+
+    <!-- PRAYER QUESTS (god only) -->
+    <div id="prayBlock" style="display:none">
+      <div class="fl">
+        <label>Prayer quests</label>
+        <div id="prayList" style="display:flex;flex-direction:column;gap:5px;margin-bottom:6px"></div>
+        <button class="btn btn-out" style="font-size:11.5px;padding:6px 10px" onclick="addPrayer()">+ Add quest</button>
+      </div>
+    </div>
+
+    <!-- TERRAIN HP -->
+    <div id="terrainBlock" style="display:none">
+      <div class="fl"><label>Terrain HP</label><input id="fTHp" type="number" value="6" min="1" max="20" oninput="render()"/></div>
+    </div>
+
+    <!-- RULES -->
+    <div class="fl">
+      <label>Rules text</label>
+      <textarea id="fRules" placeholder="Taunt — Enemies must attack this creature first.&#10;Smite (2) — Deal 3 damage to one target." oninput="render()"></textarea>
+    </div>
+    <div class="fl">
+      <label>Quick keywords</label>
+      <div class="chips">
+        <span class="chip" onclick="addKw('Taunt')">Taunt</span>
+        <span class="chip" onclick="addKw('Rush')">Rush</span>
+        <span class="chip" onclick="addKw('Stealth')">Stealth</span>
+        <span class="chip" onclick="addKw('Flying')">Flying</span>
+        <span class="chip" onclick="addKw('Reach')">Reach</span>
+        <span class="chip" onclick="addKw('Lifesteal')">Lifesteal</span>
+        <span class="chip" onclick="addKw('Shield X')">Shield X</span>
+        <span class="chip" onclick="addKw('Burn X')">Burn X</span>
+        <span class="chip" onclick="addKw('Freeze')">Freeze</span>
+        <span class="chip" onclick="addKw('Stun')">Stun</span>
+        <span class="chip" onclick="addKw('Channel (X)')">Channel</span>
+        <span class="chip" onclick="addKw('Ward')">Ward</span>
+        <span class="chip" onclick="addKw('Resurrect')">Resurrect</span>
+        <span class="chip" onclick="addKw('Impassable')">Impassable</span>
+        <span class="chip" onclick="addKw('Vision Ward')">Vision Ward</span>
+        <span class="chip" onclick="addKw('Summon (X)')">Summon</span>
+        <span class="chip" onclick="addKw('Overload (X)')">Overload</span>
+      </div>
+    </div>
+
+    <div class="fl">
+      <label>Flavor text</label>
+      <input id="fFlavor" type="text" placeholder='"He stood at the gates of Olympus..."' oninput="render()"/>
+    </div>
+
+    <div class="brow">
+      <button class="btn btn-gold" onclick="saveCard()">Save to gallery</button>
+      <button class="btn btn-out" onclick="resetForm()">Reset</button>
+    </div>
+  </div><!-- /tab-form -->
+
+  <!-- ── QUICK-TYPE TAB ── -->
+  <div id="tab-quick" class="pbody" style="display:none">
+    <div class="fl"><label>Format reference</label>
+      <div class="qf-code">
+        name: Titan of Cinders<br>
+        type: creature<br>
+        subtype: Colossus<br>
+        color: fire<br>
+        cost: 2fire 1any<br>
+        atk: 4 | hp: 8 | mov: 2<br>
+        level: 1<br>
+        rules: Taunt — Must be attacked first.<br>
+        rules: Smite (2) — Deal 3 damage.<br>
+        flavor: "He stood at the gates..."
+      </div>
+    </div>
+    <div class="fl"><label>Type your card</label>
+      <textarea class="qf-in" id="qfIn" placeholder="name: My Card&#10;type: creature&#10;color: fire&#10;cost: 2fire 1any&#10;atk: 4 | hp: 8 | mov: 2&#10;level: 1&#10;rules: Taunt — Must be attacked first." oninput="parseQuick()"></textarea>
+    </div>
+    <div class="fl"><label>Card art</label>
+      <div class="art-zone" id="az2">
+        <input type="file" accept="image/*" onchange="loadArt(this)"/>
+        <span class="az-icon">🖼</span><span class="az-txt">Click or drag image</span>
+      </div>
+    </div>
+    <div class="brow">
+      <button class="btn btn-gold" onclick="saveCard()">Save to gallery</button>
+      <button class="btn btn-out" onclick="document.getElementById('qfIn').value='';parseQuick()">Clear</button>
+    </div>
+  </div><!-- /tab-quick -->
+
+  <!-- ── GALLERY TAB ── -->
+  <div id="tab-gallery" class="pbody" style="display:none">
+    <div class="sec-label">Saved cards</div>
+    <div id="galList"><div class="empty-gal">No cards saved yet.<br/>Build a card and click "Save to gallery".</div></div>
+    <div class="brow">
+      <button class="btn btn-gold" onclick="exportAll()">Export all as PNG</button>
+    </div>
+  </div><!-- /tab-gallery -->
+
+</div><!-- /panel -->
+
+<!-- ═══════════ PREVIEW ═══════════ -->
+<div class="preview">
+  <div class="prev-label">Live preview</div>
+  <canvas id="mainCanvas" class="main-card" width="260" height="364"></canvas>
+  <div class="export-bar">
+    <span>Save to gallery to keep, then export.</span>
+    <button class="btn btn-out" onclick="dlCurrent()">⬇ Download PNG</button>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<script>
+// ══════════════════════════════════════════
+// PALETTES — 8 element colors
+// ══════════════════════════════════════════
+const PAL = {
+  fire:    {frame:'#6b1500',border:'#c44020',inner:'#3d0e00',art:'#1e0600',namebg:'#120400',text:'#f09575',rule:'#e8d8b0',tag:'#6b1500',pip:'#c44020',pipTxt:'#fff0e8'},
+  water:   {frame:'#032240',border:'#1460a0',inner:'#031830',art:'#020c1c',namebg:'#010810',text:'#78aae0',rule:'#e8d8b0',tag:'#032240',pip:'#1460a0',pipTxt:'#e0f0ff'},
+  earth:   {frame:'#122800',border:'#356010',inner:'#0c1e00',art:'#071200',namebg:'#040e00',text:'#a8cc70',rule:'#e8d8b0',tag:'#122800',pip:'#356010',pipTxt:'#e8ffe0'},
+  thunder: {frame:'#0c1840',border:'#2850a8',inner:'#081030',art:'#040c20',namebg:'#020810',text:'#80a8e8',rule:'#e8d8b0',tag:'#0c1840',pip:'#2850a8',pipTxt:'#e0eaff'},
+  light:   {frame:'#3a2000',border:'#b87808',inner:'#281600',art:'#180e00',namebg:'#100800',text:'#e8b850',rule:'#e8d8b0',tag:'#3a2000',pip:'#b87808',pipTxt:'#fff8e0'},
+  dark:    {frame:'#1a1230',border:'#4a4090',inner:'#120c22',art:'#0a0818',namebg:'#080614',text:'#a090d8',rule:'#e8d8b0',tag:'#1a1230',pip:'#4a4090',pipTxt:'#e8e0ff'},
+  mind:    {frame:'#200830',border:'#7828b8',inner:'#160520',art:'#0e0318',namebg:'#0a0212',text:'#d090e8',rule:'#e8d8b0',tag:'#200830',pip:'#7828b8',pipTxt:'#f8e8ff'},
+  undead:  {frame:'#101410',border:'#385038',inner:'#0a0e0a',art:'#060a06',namebg:'#040604',text:'#80a878',rule:'#e8d8b0',tag:'#101410',pip:'#385038',pipTxt:'#e0ffe0'},
+};
+
+const DUAL_COLORS = {
+  fire:['#c44020','#FF8860'],water:['#1460a0','#60A8E0'],earth:['#356010','#80C040'],
+  thunder:['#2850a8','#7090E0'],light:['#b87808','#F0C040'],dark:['#4a4090','#9080D0'],
+  mind:['#7828b8','#C060E8'],undead:['#385038','#70A068']
+};
+
+const COLOR_LETTER = {fire:'F',water:'W',earth:'E',thunder:'T',light:'L',dark:'D',mind:'M',undead:'U'};
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let artImg = null;
+let gallery = [];
+let manaRows = [{amt:2,color:'fire'},{amt:1,color:'any'}];
+let prayers = ['Summon 3 creatures of this element.','Destroy 2 enemy creatures.','Cast 2 matching spells.'];
+
+// ══════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════
+function switchTab(id,btn){
+  document.querySelectorAll('.pbody').forEach(t=>t.style.display='none');
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('tab-'+id).style.display='flex';
+  btn.classList.add('on');
+}
+
+// ══════════════════════════════════════════
+// TYPE CHANGE
+// ══════════════════════════════════════════
+function onTypeChange(){
+  const t=document.getElementById('fType').value;
+  document.getElementById('statBlock').style.display   =['creature','blessed'].includes(t)?'':'none';
+  document.getElementById('blessBlock').style.display  =t==='blessed'?'':'none';
+  document.getElementById('prayBlock').style.display   =t==='god'?'':'none';
+  document.getElementById('terrainBlock').style.display=t==='terrain'?'':'none';
+  document.getElementById('colorSingle').style.display =t==='god'?'none':'';
+  document.getElementById('colorDual').style.display   =t==='god'?'':'none';
+  document.getElementById('manaCostBlock').style.display=t==='god'?'none':'';
+  if(t==='god') buildPrayerUI();
+  render();
+}
+
+// ══════════════════════════════════════════
+// MANA BUILDER
+// ══════════════════════════════════════════
+function buildManaUI(){
+  const el=document.getElementById('manaBuilder');
+  el.innerHTML='';
+  manaRows.forEach((row,i)=>{
+    const div=document.createElement('div');
+    div.className='mana-row';
+    div.innerHTML=`
+      <input type="number" min="1" max="9" value="${row.amt}" oninput="manaRows[${i}].amt=+this.value;updateManaPreview();render()" style="background:#1d1b17;border:1px solid #2e2a22;color:#ede3c8;border-radius:5px;padding:6px 7px;font-size:12px;font-family:Inter,sans-serif"/>
+      <select onchange="manaRows[${i}].color=this.value;updateManaPreview();render()" style="background:#1d1b17;border:1px solid #2e2a22;color:#ede3c8;border-radius:5px;padding:6px 7px;font-size:12px;font-family:Inter,sans-serif">
+        <option value="fire"${row.color==='fire'?' selected':''}>🔥 Fire</option>
+        <option value="water"${row.color==='water'?' selected':''}>💧 Water</option>
+        <option value="earth"${row.color==='earth'?' selected':''}>🌿 Earth</option>
+        <option value="thunder"${row.color==='thunder'?' selected':''}>⚡ Thunder</option>
+        <option value="light"${row.color==='light'?' selected':''}>✨ Light</option>
+        <option value="dark"${row.color==='dark'?' selected':''}>🌑 Dark</option>
+        <option value="mind"${row.color==='mind'?' selected':''}>🔮 Mind</option>
+        <option value="undead"${row.color==='undead'?' selected':''}>💀 Undead</option>
+        <option value="any"${row.color==='any'?' selected':''}>⬡ Any</option>
+      </select>
+      <button class="mana-del" onclick="manaRows.splice(${i},1);buildManaUI();updateManaPreview();render()">✕</button>`;
+    el.appendChild(div);
+  });
+  updateManaPreview();
+}
+function addManaRow(){manaRows.push({amt:1,color:'any'});buildManaUI();render();}
+function updateManaPreview(){
+  const el=document.getElementById('manaPreview');
+  el.innerHTML='';
+  manaRows.forEach(row=>{
+    const p=row.color==='any'?{pip:'#444',pipTxt:'#ccc'}:PAL[row.color];
+    for(let i=0;i<Math.min(row.amt,9);i++){
+      const pip=document.createElement('div');
+      pip.className='mpip';
+      pip.style.cssText=`background:${p.pip};border-color:${p.pip};color:${p.pipTxt}`;
+      pip.textContent=row.color==='any'?'?':COLOR_LETTER[row.color];
+      el.appendChild(pip);
+    }
+  });
+}
+
+// ══════════════════════════════════════════
+// PRAYER UI
+// ══════════════════════════════════════════
+function buildPrayerUI(){
+  const el=document.getElementById('prayList');
+  el.innerHTML='';
+  prayers.forEach((p,i)=>{
+    const row=document.createElement('div');
+    row.className='pray-row';
+    row.innerHTML=`<input type="text" value="${p}" oninput="prayers[${i}]=this.value;render()" style="background:#1d1b17;border:1px solid #2e2a22;color:#ede3c8;border-radius:5px;padding:6px 8px;font-size:11.5px;font-family:Inter,sans-serif"/>
+      <button class="pray-del" onclick="prayers.splice(${i},1);buildPrayerUI();render()">✕</button>`;
+    el.appendChild(row);
+  });
+}
+function addPrayer(){prayers.push('New prayer quest.');buildPrayerUI();render();}
+
+// ══════════════════════════════════════════
+// ART
+// ══════════════════════════════════════════
+function loadArt(input){
+  const f=input.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{const img=new Image();img.onload=()=>{artImg=img;syncArtZones();render();};img.src=e.target.result;};
+  r.readAsDataURL(f);
+}
+function syncArtZones(){
+  ['az1','az2'].forEach(id=>{
+    const z=document.getElementById(id); if(!z) return;
+    z.classList.add('has-img');
+    let pv=z.querySelector('img.prev');
+    if(!pv){pv=document.createElement('img');pv.className='prev';z.appendChild(pv);}
+    pv.src=artImg.src;
+    z.querySelectorAll('.az-icon,.az-txt').forEach(d=>d.style.display='none');
+  });
+}
+
+// ══════════════════════════════════════════
+// KEYWORDS
+// ══════════════════════════════════════════
+function addKw(kw){
+  const el=document.getElementById('fRules');
+  const v=el.value.trim();
+  el.value=v?v+'\n'+kw+' — ':kw+' — ';
+  render();el.focus();
+}
+
+// ══════════════════════════════════════════
+// QUICK PARSE
+// ══════════════════════════════════════════
+function parseQuick(){
+  const txt=document.getElementById('qfIn').value;
+  const lines=txt.split('\n');
+  const get=k=>{const l=lines.find(l=>l.toLowerCase().startsWith(k+':'));return l?l.slice(k.length+1).trim():''};
+  const sv=(id,v)=>{if(v&&document.getElementById(id))document.getElementById(id).value=v;};
+  sv('fName',get('name'));sv('fSub',get('subtype'));sv('fFlavor',get('flavor').replace(/^["']|["']$/g,''));
+  const tp=get('type').toLowerCase();if(tp){sv('fType',tp);onTypeChange();}
+  const col=get('color').toLowerCase();if(col)sv('fColor',col);
+  const m=txt.match(/atk:\s*(\d+)/i);if(m)sv('fAtk',m[1]);
+  const m2=txt.match(/hp:\s*(\d+)/i);if(m2)sv('fHp',m2[1]);
+  const m3=txt.match(/mov:\s*(\d+)/i);if(m3)sv('fMov',m3[1]);
+  const m4=txt.match(/level:\s*(\d+)/i);if(m4)sv('fLevel',m4[1]);
+  const costStr=get('cost');
+  if(costStr){
+    manaRows=[];
+    const parts=costStr.split(/\s+/);
+    parts.forEach(part=>{
+      const mc=part.match(/^(\d+)(\w+)$/);
+      if(mc){const col2=mc[2]==='any'?'any':mc[2].toLowerCase();manaRows.push({amt:parseInt(mc[1]),color:col2});}
+    });
+    buildManaUI();
+  }
+  const rls=lines.filter(l=>l.toLowerCase().startsWith('rules:')).map(l=>l.slice(6).trim());
+  if(rls.length)sv('fRules',rls.join('\n'));
+  render();
+}
+
+// ══════════════════════════════════════════
+// RESET
+// ══════════════════════════════════════════
+function resetForm(){
+  ['fName','fSub','fRules','fFlavor'].forEach(id=>document.getElementById(id).value='');
+  ['fAtk','fHp'].forEach(id=>document.getElementById(id).value=4);
+  document.getElementById('fMov').value=2;
+  document.getElementById('fLevel').value=1;
+  manaRows=[{amt:2,color:'fire'},{amt:1,color:'any'}];
+  buildManaUI();artImg=null;
+  ['az1','az2'].forEach(id=>{
+    const z=document.getElementById(id);if(!z)return;
+    z.classList.remove('has-img');
+    const pv=z.querySelector('img.prev');if(pv)pv.remove();
+    z.querySelectorAll('.az-icon,.az-txt').forEach(d=>d.style.display='');
+  });
+  render();
+}
+
+// ══════════════════════════════════════════
+// GALLERY
+// ══════════════════════════════════════════
+function saveCard(){
+  const cv=document.getElementById('mainCanvas');
+  gallery.push({url:cv.toDataURL(),name:document.getElementById('fName').value||'Card '+(gallery.length+1)});
+  renderGallery();
+}
+function renderGallery(){
+  const el=document.getElementById('galList');
+  if(!gallery.length){el.innerHTML='<div class="empty-gal">No cards saved yet.</div>';return;}
+  el.innerHTML='';
+  const wrap=document.createElement('div');wrap.className='gal';
+  gallery.forEach((c,i)=>{
+    const item=document.createElement('div');item.className='gal-item';
+    const cv=document.createElement('canvas');cv.width=110;cv.height=154;
+    const ctx=cv.getContext('2d');const img=new Image();
+    img.onload=()=>ctx.drawImage(img,0,0,110,154);img.src=c.url;
+    const del=document.createElement('button');del.className='gal-del';del.textContent='✕';
+    del.onclick=()=>{gallery.splice(i,1);renderGallery();};
+    item.appendChild(cv);item.appendChild(del);item.title=c.name;
+    wrap.appendChild(item);
+  });
+  el.appendChild(wrap);
+}
+function dlCurrent(){
+  const cv=document.getElementById('mainCanvas');
+  const a=document.createElement('a');
+  a.download=(document.getElementById('fName').value||'card')+'.png';
+  a.href=cv.toDataURL();a.click();
+}
+function exportAll(){
+  gallery.forEach((c,i)=>setTimeout(()=>{
+    const a=document.createElement('a');
+    a.download=(c.name||'card_'+i)+'.png';
+    a.href=c.url;a.click();
+  },i*300));
+}
+
+// ══════════════════════════════════════════
+// CANVAS HELPERS
+// ══════════════════════════════════════════
+function rr(ctx,x,y,w,h,r,fill,stroke,sw){
+  ctx.beginPath();ctx.roundRect(x,y,w,h,r);
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=sw||1;ctx.stroke();}
+}
+function circ(ctx,cx,cy,r,fill,stroke,sw){
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=sw||1;ctx.stroke();}
+}
+function clipRR(ctx,x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.clip();}
+function txt(ctx,str,x,y,font,color,align='left',maxW){
+  ctx.font=font;ctx.fillStyle=color;ctx.textAlign=align;
+  if(maxW){
+    let s=str;
+    while(ctx.measureText(s).width>maxW&&s.length>0)s=s.slice(0,-1);
+    if(s!==str)s=s.slice(0,-1)+'…';
+    ctx.fillText(s,x,y);
+  } else ctx.fillText(str,x,y);
+  ctx.textAlign='left';
+}
+
+// ══════════════════════════════════════════
+// DRAW MANA PIPS ON CANVAS
+// ══════════════════════════════════════════
+function drawManaPips(ctx,x,y,rows){
+  let px=x;
+  rows.forEach(row=>{
+    const p=row.color==='any'?{pip:'#555',pipTxt:'#ccc'}:PAL[row.color];
+    const amt=Math.min(row.amt,9);
+    for(let i=0;i<amt;i++){
+      circ(ctx,px+6,y+6,7,p.pip,p.pip,0);
+      ctx.strokeStyle=lighten(p.pip,40);ctx.lineWidth=1;ctx.beginPath();ctx.arc(px+6,y+6,7,0,Math.PI*2);ctx.stroke();
+      const ltr=row.color==='any'?'?':COLOR_LETTER[row.color];
+      txt(ctx,ltr,px+6,y+10,'bold 7px Cinzel,serif',p.pipTxt,'center');
+      px+=16;
+    }
+  });
+}
+
+function lighten(hex,amt){
+  let r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  r=Math.min(255,r+amt);g=Math.min(255,g+amt);b=Math.min(255,b+amt);
+  return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+
+// ══════════════════════════════════════════
+// WRAP TEXT
+// ══════════════════════════════════════════
+function wrapText(ctx,text,maxW,fontSize){
+  ctx.font=`${fontSize}px 'Crimson Text',Georgia,serif`;
+  const words=text.split(' ');const lines=[];let cur='';
+  words.forEach(w=>{
+    const test=cur?cur+' '+w:w;
+    if(ctx.measureText(test).width>maxW&&cur){lines.push(cur);cur=w;}
+    else cur=test;
+  });
+  if(cur)lines.push(cur);
+  return lines;
+}
+
+function rulesLines(rules,ctx,maxW){
+  if(!rules)return[];
+  const raw=rules.split('\n');
+  const result=[];
+  raw.forEach(line=>{
+    const sub=wrapText(ctx,line,maxW,10);
+    sub.forEach((l,i)=>result.push({text:l,first:i===0,orig:line}));
+  });
+  return result;
+}
+
+// ══════════════════════════════════════════
+// MAIN RENDER
+// ══════════════════════════════════════════
+function render(){
+  const cv=document.getElementById('mainCanvas');
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);
+
+  const type=document.getElementById('fType').value;
+  const isGod=type==='god';
+  const color=isGod?document.getElementById('fColor1').value:document.getElementById('fColor').value;
+  const color2=isGod?document.getElementById('fColor2').value:null;
+  const P=PAL[color]||PAL.fire;
+  const P2=isGod&&color2?PAL[color2]:null;
+
+  // ── OUTER FRAME
+  rr(ctx,0,0,W,H,13,P.frame);
+  // dual-color gradient frame for god
+  if(isGod&&P2){
+    const grad=ctx.createLinearGradient(0,0,W,0);
+    grad.addColorStop(0,P.frame);grad.addColorStop(1,P2.frame);
+    rr(ctx,0,0,W,H,13,null);ctx.fillStyle=grad;ctx.fill();
+  }
+  // inner border ring
+  rr(ctx,2,2,W-4,H-4,11,null,P.border,2);
+  if(isGod&&P2){
+    const grad2=ctx.createLinearGradient(0,0,W,0);
+    grad2.addColorStop(0,P.border);grad2.addColorStop(1,P2.border);
+    ctx.strokeStyle=grad2;ctx.lineWidth=2;
+    ctx.beginPath();ctx.roundRect(2,2,W-4,H-4,11);ctx.stroke();
+  }
+  rr(ctx,4,4,W-8,H-8,10,P.inner);
+
+  // ══ ART ZONE — top 1/3
+  const artY=12, artH=Math.round(H*0.33);
+  rr(ctx,8,artY,W-16,artH,4,P.art);
+  if(artImg){
+    ctx.save();clipRR(ctx,8,artY,W-16,artH,4);
+    const sc=Math.max((W-16)/artImg.width,artH/artImg.height);
+    const dw=artImg.width*sc,dh=artImg.height*sc;
+    ctx.drawImage(artImg,8+((W-16)-dw)/2,artY+(artH-dh)/2,dw,dh);
+    ctx.restore();
+  } else {
+    drawArtPlaceholder(ctx,P,type,8,artY,W-16,artH);
+  }
+  rr(ctx,8,artY,W-16,artH,4,null,P.border,0.8);
+
+  // HP badge — top-right corner on art
+  if(!isGod&&['creature','blessed'].includes(type)){
+    const hp=document.getElementById('fHp').value||'—';
+    rr(ctx,W-34,artY+4,26,22,4,P.inner,P.border,1);
+    txt(ctx,'HP',W-21,artY+12,'bold 6px Cinzel,serif',P.text,'center');
+    txt(ctx,hp,W-21,artY+24,'bold 9px Cinzel,serif',P.text,'center');
+  }
+
+  // ══ NAME BAR
+  const nameY=artY+artH+2;
+  rr(ctx,8,nameY,W-16,18,2,P.namebg);
+  const name=document.getElementById('fName').value||'Card Name';
+  txt(ctx,name,13,nameY+13,'bold 10.5px Cinzel,serif',P.text,'left',W-70);
+
+  // Mana pips on name bar right side
+  if(!isGod){
+    const pipsTotalW=manaRows.reduce((s,r)=>s+Math.min(r.amt,9)*16,0);
+    const pipsX=W-16-pipsTotalW;
+    drawManaPips(ctx,pipsX,nameY+1,manaRows);
+  } else {
+    // God dual-color pips — one pip each color
+    const c1p=PAL[color];const c2p=P2||PAL.light;
+    circ(ctx,W-28,nameY+9,8,c1p.pip,lighten(c1p.pip,40),1);
+    txt(ctx,COLOR_LETTER[color],W-28,nameY+12,'bold 8px Cinzel,serif',c1p.pipTxt,'center');
+    circ(ctx,W-14,nameY+9,8,c2p.pip,lighten(c2p.pip,40),1);
+    txt(ctx,COLOR_LETTER[color2||'light'],W-14,nameY+12,'bold 8px Cinzel,serif',c2p.pipTxt,'center');
+  }
+
+  // ══ TYPE LINE
+  const typeY=nameY+20;
+  rr(ctx,8,typeY,W-16,13,1,P.art);
+  const sub=document.getElementById('fSub').value||defSub(type);
+  const cname=color.charAt(0).toUpperCase()+color.slice(1);
+  let typeLine='';
+  if(type==='creature'||type==='blessed'){
+    const ct=document.getElementById('fCreatureType').value;
+    const lv=document.getElementById('fLevel').value;
+    typeLine=`${cname} ${ct.charAt(0).toUpperCase()+ct.slice(1)}${sub?' · '+sub:''} · Lv ${lv}`;
+  } else if(type==='spell') typeLine=`Spell — ${cname}${sub?' · '+sub:''}`;
+  else if(type==='relic')   typeLine=`Relic — ${cname}${sub?' · '+sub:''}`;
+  else if(type==='terrain') typeLine=`Terrain — ${cname}${sub?' · '+sub:''}`;
+  else if(type==='god'){
+    const c2n=(color2||'light').charAt(0).toUpperCase()+(color2||'light').slice(1);
+    typeLine=`God · ${cname} / ${c2n}${sub?' · '+sub:''}`;
+  }
+  txt(ctx,typeLine,W/2,typeY+9.5,'italic 8px Crimson Text,Georgia,serif',P.text,'center',W-20);
+
+  // ══ TEXT BOX — bottom 2/3 minus stats bar
+  const tbY=typeY+15;
+  const statsH=isGod?0:22;
+  const tbH=H-tbY-statsH-6;
+  rr(ctx,8,tbY,W-16,tbH,3,P.rule);
+  rr(ctx,8,tbY,W-16,tbH,3,null,P.art,0.7);
+
+  // type tag pill
+  const tagLabel=({creature:'Creature',blessed:'Blessed Creature',spell:'Spell',relic:'Relic',terrain:'Terrain',god:'God Card'})[type]||type;
+  const tagW=ctx.measureText(tagLabel.toUpperCase()+'  ')*1+50;
+  rr(ctx,11,tbY+4,tagW+6,10,2,P.tag);
+  txt(ctx,tagLabel.toUpperCase(),14,tbY+12,'bold 6px Inter,sans-serif',P.text,'left');
+  const tgW=ctx.measureText(tagLabel.toUpperCase()).width+10;
+
+  // Prayer quests (god)
+  let textStartY=tbY+20;
+  if(isGod){
+    txt(ctx,'Prayer quests (complete all to summon)',12,textStartY,'600 7px Inter,sans-serif','#5a3010','left',W-20);
+    textStartY+=12;
+    prayers.forEach((p,i)=>{
+      circ(ctx,17,textStartY-3,5,P.tag,lighten(P.tag,40),1);
+      txt(ctx,String(i+1),17,textStartY,'bold 6.5px Cinzel,serif',P.text,'center');
+      txt(ctx,p,26,textStartY,'9px Crimson Text,Georgia,serif','#2a1200','left',W-34);
+      textStartY+=12;
+    });
+    // divider
+    ctx.strokeStyle='#9a7040';ctx.lineWidth=0.5;
+    ctx.beginPath();ctx.moveTo(11,textStartY+2);ctx.lineTo(W-11,textStartY+2);ctx.stroke();
+    textStartY+=8;
+  }
+
+  // Rules text
+  const rules=document.getElementById('fRules').value;
+  const rl=rulesLines(rules,ctx,W-28);
+  let ry=textStartY;
+  const lineH=11;
+  rl.forEach(line=>{
+    if(ry>tbY+tbH-18)return;
+    const dashIdx=line.text.indexOf(' — ');
+    if(line.first&&dashIdx>0){
+      const kw=line.text.slice(0,dashIdx);
+      const rest=line.text.slice(dashIdx);
+      ctx.font='bold 10px Crimson Text,Georgia,serif';
+      ctx.fillStyle=darken(P.rule,60);
+      const kwW=ctx.measureText(kw).width;
+      ctx.fillText(kw,12,ry);
+      ctx.font='10px Crimson Text,Georgia,serif';
+      ctx.fillStyle='#2a1200';
+      ctx.fillText(rest,12+kwW,ry);
+    } else {
+      txt(ctx,line.text,12,ry,'10px Crimson Text,Georgia,serif','#2a1200','left',W-24);
+    }
+    ry+=lineH;
+  });
+
+  // Flavor text
+  const flavor=document.getElementById('fFlavor').value;
+  if(flavor){
+    const flavorY=tbY+tbH-14;
+    ctx.strokeStyle='#9a7040';ctx.lineWidth=0.5;
+    ctx.beginPath();ctx.moveTo(11,flavorY-4);ctx.lineTo(W-11,flavorY-4);ctx.stroke();
+    txt(ctx,flavor,W/2,flavorY+4,'italic 9px Crimson Text,Georgia,serif','#5a3010','center',W-24);
+  }
+
+  // Blessed bar
+  if(type==='blessed'){
+    const bn=parseInt(document.getElementById('fBlessNow').value)||0;
+    const bm=parseInt(document.getElementById('fBlessMax').value)||5;
+    const barY=tbY+tbH-18;
+    rr(ctx,11,barY,W-22,7,3,P.art);
+    rr(ctx,11,barY,Math.max(4,(W-22)*Math.min(bn/bm,1)),7,3,P.border);
+    txt(ctx,`Blessing ${bn}/${bm}`,12,barY+6,'6px Inter,sans-serif',P.text,'left');
+    txt(ctx,`Active at ${bm}`,W-12,barY+6,'6px Inter,sans-serif',P.text,'right',80);
+  }
+
+  // ══ STATS BAR (non-god)
+  if(!isGod){
+    const sbY=H-statsH-4;
+    rr(ctx,8,sbY,W-16,statsH,3,P.namebg);
+    if(['creature','blessed'].includes(type)){
+      const atk=document.getElementById('fAtk').value||'—';
+      const mov=document.getElementById('fMov').value||'—';
+      // ATK — bottom left
+      rr(ctx,11,sbY+3,36,16,3,'#1a0800',null,0);
+      ctx.strokeStyle='#c44020';ctx.lineWidth=0.8;ctx.beginPath();ctx.roundRect(11,sbY+3,36,16,3);ctx.stroke();
+      txt(ctx,'ATK',13,sbY+10,'bold 6px Inter,sans-serif','#c44020','left');
+      txt(ctx,atk,34,sbY+18,'bold 10px Cinzel,serif',P.text,'center');
+      // MOV — bottom right
+      rr(ctx,W-47,sbY+3,36,16,3,'#0a1820',null,0);
+      ctx.strokeStyle='#3a70b0';ctx.lineWidth=0.8;ctx.beginPath();ctx.roundRect(W-47,sbY+3,36,16,3);ctx.stroke();
+      txt(ctx,'MOV',W-45,sbY+10,'bold 6px Inter,sans-serif','#3a70b0','left');
+      txt(ctx,mov,W-29,sbY+18,'bold 10px Cinzel,serif',P.text,'center');
+    } else if(type==='terrain'){
+      txt(ctx,'Terrain HP: '+(document.getElementById('fTHp').value||6),W/2,sbY+13,'9px Crimson Text,serif',P.text,'center');
+    } else {
+      txt(ctx,'Mana cost: '+manaRows.map(r=>r.amt+' '+r.color).join(' + '),W/2,sbY+13,'9px Crimson Text,serif',P.text,'center',W-24);
+    }
+  }
+
+  // ══ CORNER FILIGREE
+  drawFiligree(ctx,P,W,H,isGod,P2);
+
+  // ══ OUTER BORDER
+  rr(ctx,0,0,W,H,13,null,P.art,1.5);
+}
+
+function drawFiligree(ctx,P,W,H,isGod,P2){
+  const corners=[[10,10,'tl'],[W-10,10,'tr'],[10,H-10,'bl'],[W-10,H-10,'br']];
+  corners.forEach(([cx,cy,pos])=>{
+    const col=(isGod&&P2&&(pos==='tr'||pos==='br'))?P2.border:P.border;
+    ctx.fillStyle=col;ctx.globalAlpha=.5;
+    ctx.beginPath();
+    if(pos==='tl'){ctx.moveTo(cx,cy);ctx.lineTo(cx+9,cy);ctx.lineTo(cx,cy+9);}
+    else if(pos==='tr'){ctx.moveTo(cx,cy);ctx.lineTo(cx-9,cy);ctx.lineTo(cx,cy+9);}
+    else if(pos==='bl'){ctx.moveTo(cx,cy);ctx.lineTo(cx+9,cy);ctx.lineTo(cx,cy-9);}
+    else{ctx.moveTo(cx,cy);ctx.lineTo(cx-9,cy);ctx.lineTo(cx,cy-9);}
+    ctx.closePath();ctx.fill();ctx.globalAlpha=1;
+  });
+}
+
+function drawArtPlaceholder(ctx,P,type,x,y,w,h){
+  const cx=x+w/2,cy=y+h/2;
+  circ(ctx,cx,cy,h*.36,P.inner,null,0);
+  ctx.strokeStyle=P.border;ctx.lineWidth=1;ctx.globalAlpha=.4;
+  ctx.beginPath();ctx.arc(cx,cy,h*.28,0,Math.PI*2);ctx.stroke();
+  ctx.globalAlpha=1;
+  const icons={creature:'⚔',blessed:'✦',spell:'✦',relic:'🛡',terrain:'🌿',god:'★'};
+  txt(ctx,icons[type]||'✦',cx,cy+8,`bold ${Math.round(h*.22)}px serif`,P.text,'center');
+  txt(ctx,'Upload art above',cx,y+h-6,'italic 8px Crimson Text,serif',P.text,'center',w-10);
+}
+
+function defSub(type){return{creature:'',blessed:'',spell:'Evocation',relic:'Weapon',terrain:'Zone',god:'Olympian'}[type]||'';}
+function darken(hex,amt){
+  let r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  r=Math.max(0,r-amt);g=Math.max(0,g-amt);b=Math.max(0,b-amt);
+  return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+buildManaUI();
+onTypeChange();
+render();
+</script>
+</body>
+</html>
