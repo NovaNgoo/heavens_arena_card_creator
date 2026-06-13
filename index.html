@@ -260,19 +260,16 @@ canvas.main-card{border-radius:13px;box-shadow:0 10px 48px rgba(0,0,0,.8)}
         <span class="chip" onclick="addKw('Taunt')">Taunt</span>
         <span class="chip" onclick="addKw('Rush')">Rush</span>
         <span class="chip" onclick="addKw('Stealth')">Stealth</span>
-        <span class="chip" onclick="addKw('Flying')">Flying</span>
         <span class="chip" onclick="addKw('Reach')">Reach</span>
         <span class="chip" onclick="addKw('Lifesteal')">Lifesteal</span>
         <span class="chip" onclick="addKw('Shield X')">Shield X</span>
         <span class="chip" onclick="addKw('Burn X')">Burn X</span>
-        <span class="chip" onclick="addKw('Freeze')">Freeze</span>
         <span class="chip" onclick="addKw('Stun')">Stun</span>
-        <span class="chip" onclick="addKw('Channel (X)')">Channel</span>
-        <span class="chip" onclick="addKw('Ward')">Ward</span>
+        <span class="chip" onclick="addKw('Buff (X)')">Channel</span>
         <span class="chip" onclick="addKw('Resurrect')">Resurrect</span>
-        <span class="chip" onclick="addKw('Impassable')">Impassable</span>
-        <span class="chip" onclick="addKw('Vision Ward')">Vision Ward</span>
-        <span class="chip" onclick="addKw('Overload (X)')">Overload</span>
+        <span class="chip" onclick="addKw('Splash')">Splash</span>
+        <span class="chip" onclick="addKw('Freeze')">Freeze</span>
+        <span class="chip" onclick="addKw('Spell-cast')">SpellCast/span>
       </div>
     </div>
     <div class="fl">
@@ -981,6 +978,25 @@ function render(){
     rr(ctx,11,barY,Math.max(4,(W-22)*Math.min(bn/bm,1)),7,3,P.border);
     txt(ctx,`Blessing ${bn}/${bm}`,12,barY+6,'6px Inter,sans-serif',P.text,'left');
     txt(ctx,`Active at ${bm}`,W-12,barY+6,'6px Inter,sans-serif',P.text,'right',80);
+    <div class="fl">
+  <label>Blessed Spell Name</label>
+  <input id="fBlessSpellName" type="text"
+         placeholder="Divine Burst"
+         oninput="render()"/>
+</div>
+
+<div class="fl">
+  <label>Blessed Spell Cost</label>
+  <input id="fBlessSpellCost" type="text"
+         placeholder="2fire 1light"
+         oninput="render()"/>
+</div>
+
+<div class="fl">
+  <label>Blessed Spell Effect</label>
+  <textarea id="fBlessSpellEffect"
+            oninput="render()"></textarea>
+</div>
   }
 
   // ════════════════════════════
