@@ -235,12 +235,54 @@ canvas.main-card{border-radius:13px;box-shadow:0 10px 48px rgba(0,0,0,.8)}
       </div>
     </div>
 
-    <div id="blessBlock" style="display:none">
-      <div class="r2">
-        <div class="fl"><label>Blessing current</label><input id="fBlessNow" type="number" value="0" min="0" max="10" oninput="render()"/></div>
-        <div class="fl"><label>Blessing max</label><input id="fBlessMax" type="number" value="5" min="1" max="10" oninput="render()"/></div>
-      </div>
+<div id="blessBlock" style="display:none">
+
+  <div class="r2">
+    <div class="fl">
+      <label>Blessing Current</label>
+      <input id="fBlessNow"
+             type="number"
+             value="0"
+             min="0"
+             max="10"
+             oninput="render()"/>
     </div>
+
+    <div class="fl">
+      <label>Blessing Max</label>
+      <input id="fBlessMax"
+             type="number"
+             value="5"
+             min="1"
+             max="10"
+             oninput="render()"/>
+    </div>
+  </div>
+
+  <div class="fl">
+    <label>Blessed Spell Name</label>
+    <input id="fBlessSpellName"
+           type="text"
+           placeholder="Divine Burst"
+           oninput="render()"/>
+  </div>
+
+  <div class="fl">
+    <label>Blessed Spell Cost</label>
+    <input id="fBlessSpellCost"
+           type="text"
+           placeholder="2fire 1light"
+           oninput="render()"/>
+  </div>
+
+  <div class="fl">
+    <label>Blessed Spell Effect</label>
+    <textarea id="fBlessSpellEffect"
+              placeholder="Deal 3 damage to a creature."
+              oninput="render()"></textarea>
+  </div>
+
+</div>
 
     <div id="prayBlock" style="display:none">
       <div class="fl">
@@ -625,7 +667,35 @@ function updateManaPreview(){
     }
   });
 }
+function parseBlessSpellCost(str){
 
+  const pips=[];
+
+  if(!str) return pips;
+
+  str.split(/\s+/).forEach(part=>{
+
+    const m=part.match(/^(\d+)(\w+)$/i);
+
+    if(!m) return;
+
+    const amt=parseInt(m[1]);
+    const color=m[2].toLowerCase();
+
+    for(let i=0;i<amt;i++){
+
+      pips.push({
+        e:MANA_EMOJI[color] || '⬡',
+        bg:MANA_PIP_BG[color] || 'rgba(60,55,45,0.7)',
+        bd:MANA_PIP_BORDER[color] || '#8a7850'
+      });
+
+    }
+
+  });
+
+  return pips;
+}
 // ═══════════════════════════════════════
 // PRAYER UI
 // ═══════════════════════════════════════
@@ -971,33 +1041,98 @@ function render(){
 
   // Blessed bar
   if(type==='blessed'){
-    const bn=parseInt(document.getElementById('fBlessNow').value)||0;
-    const bm=parseInt(document.getElementById('fBlessMax').value)||5;
-    const barY=tbY+tbH-18;
-    rr(ctx,11,barY,W-22,7,3,P.art);
-    rr(ctx,11,barY,Math.max(4,(W-22)*Math.min(bn/bm,1)),7,3,P.border);
-    txt(ctx,`Blessing ${bn}/${bm}`,12,barY+6,'6px Inter,sans-serif',P.text,'left');
-    txt(ctx,`Active at ${bm}`,W-12,barY+6,'6px Inter,sans-serif',P.text,'right',80);
-    <div class="fl">
-  <label>Blessed Spell Name</label>
-  <input id="fBlessSpellName" type="text"
-         placeholder="Divine Burst"
-         oninput="render()"/>
-</div>
 
-<div class="fl">
-  <label>Blessed Spell Cost</label>
-  <input id="fBlessSpellCost" type="text"
-         placeholder="2fire 1light"
-         oninput="render()"/>
-</div>
+  const spellName =
+    document.getElementById('fBlessSpellName').value
+    || 'Blessed Spell';
 
-<div class="fl">
-  <label>Blessed Spell Effect</label>
-  <textarea id="fBlessSpellEffect"
-            oninput="render()"></textarea>
-</div>
-  }
+  const spellEffect =
+    document.getElementById('fBlessSpellEffect').value
+    || '';
+
+  const spellCost =
+    document.getElementById('fBlessSpellCost').value
+    || '';
+
+  const spellPips =
+    parseBlessSpellCost(spellCost);
+
+  const spellH = 42;
+
+  const spellY =
+    tbY + tbH - spellH - 4;
+
+  ctx.strokeStyle='#9a7040';
+  ctx.lineWidth=0.5;
+
+  ctx.beginPath();
+  ctx.moveTo(11,spellY-4);
+  ctx.lineTo(W-11,spellY-4);
+  ctx.stroke();
+
+  rr(
+    ctx,
+    11,
+    spellY,
+    W-22,
+    spellH,
+    3,
+    'rgba(255,255,255,0.12)',
+    P.border,
+    0.7
+  );
+
+  txt(
+    ctx,
+    '✦ ' + spellName,
+    15,
+    spellY + 10,
+    'bold 8px Cinzel,serif',
+    P.text
+  );
+
+  let px=W-20;
+
+  spellPips.reverse().forEach(p=>{
+
+    drawManaPip(
+      ctx,
+      p.e,
+      px,
+      spellY+9,
+      p.bg,
+      p.bd
+    );
+
+    px-=18;
+
+  });
+
+  const lines =
+    wrapText(
+      ctx,
+      spellEffect,
+      W-40,
+      8
+    );
+
+  let ly=spellY+22;
+
+  lines.slice(0,2).forEach(line=>{
+
+    txt(
+      ctx,
+      line,
+      15,
+      ly,
+      '8px Crimson Text,serif',
+      '#2a1200'
+    );
+
+    ly+=9;
+
+  });
+}
 
   // ════════════════════════════
   // STATS BAR + FOOTER (combined bottom strip for creatures)
