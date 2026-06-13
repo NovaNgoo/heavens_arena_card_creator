@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Heaven's Arena — Card Creator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0b09;--surf:#161410;--surf2:#1d1b17;--bord:#2e2a22;--bord2:#3d3828;
+  --gold:#c9921a;--gold-lt:#f0c060;--gold-dk:#6b4a08;
+  --text:#ede3c8;--muted:#7a7060;--radius:8px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;min-height:100vh;display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+header{background:var(--surf);border-bottom:1px solid var(--bord);padding:12px 24px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+header h1{font-family:'Cinzel',serif;font-size:18px;color:var(--gold-lt);letter-spacing:.06em}
+header span{font-size:11px;color:var(--muted)}
+.app{display:grid;grid-template-columns:390px 1fr;height:calc(100vh - 49px);overflow:hidden}
+.panel{background:var(--surf);border-right:1px solid var(--bord);display:flex;flex-direction:column;overflow:hidden}
+.ptabs{display:flex;border-bottom:1px solid var(--bord);flex-shrink:0}
+.ptab{flex:1;padding:9px 4px;font-size:11px;font-weight:500;color:var(--muted);cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;transition:all .14s;font-family:'Inter',sans-serif}
+.ptab.on{color:var(--gold-lt);border-bottom-color:var(--gold);background:var(--surf2)}
+.ptab:hover:not(.on){color:var(--text);background:var(--surf2)}
+.pbody{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.fl{display:flex;flex-direction:column;gap:4px}
+.fl label{font-size:10.5px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.fl input,.fl select,.fl textarea{background:var(--surf2);border:1px solid var(--bord);color:var(--text);border-radius:6px;padding:7px 9px;font-size:12.5px;font-family:'Inter',sans-serif;transition:border-color .14s;width:100%}
+.fl input:focus,.fl select:focus,.fl textarea:focus{outline:none;border-color:var(--gold)}
+.fl textarea{resize:vertical;min-height:70px;line-height:1.55}
+.fl select option{background:#1d1b17}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.hint{font-size:11px;color:var(--muted);line-height:1.4;padding:6px 8px;background:var(--surf2);border-radius:4px;border-left:2px solid var(--gold-dk)}
+
+/* ART ZONE */
+.art-zone{border:2px dashed var(--bord2);border-radius:6px;padding:18px 12px;text-align:center;cursor:pointer;position:relative;overflow:hidden;transition:border-color .2s,background .2s}
+.art-zone:hover{border-color:var(--gold);background:var(--surf2)}
+.art-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2}
+.az-icon{font-size:24px;display:block;margin-bottom:4px}
+.az-txt{font-size:12px;color:var(--muted)}
+.art-preview-box{border:1px solid var(--bord);border-radius:6px;overflow:hidden;position:relative}
+.art-preview-box canvas{width:100%;height:120px;display:block}
+.replace-btn{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.75);border:1px solid var(--bord2);color:var(--text);border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif}
+.replace-btn:hover{border-color:var(--gold);color:var(--gold-lt)}
+
+/* CROP MODAL */
+.crop-modal{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px}
+.crop-modal.open{display:flex}
+.crop-modal h2{font-family:'Cinzel',serif;font-size:15px;color:var(--gold-lt);letter-spacing:.05em}
+.crop-stage{position:relative;background:#000;border:2px solid var(--bord2);border-radius:8px;overflow:hidden;cursor:move;user-select:none;touch-action:none}
+.crop-stage canvas{display:block}
+.crop-controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center}
+.crop-controls label{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.crop-controls input[type=range]{width:150px;accent-color:var(--gold)}
+.zoom-val{font-size:12px;color:var(--gold-lt);min-width:38px;text-align:center;font-weight:500}
+.crop-hint{font-size:11.5px;color:var(--muted);text-align:center;line-height:1.6;max-width:520px}
+.crop-btns{display:flex;gap:10px}
+
+/* MANA */
+.mana-builder{display:flex;flex-direction:column;gap:8px}
+.mana-row{display:grid;grid-template-columns:60px 1fr auto;gap:6px;align-items:center}
+.mana-row input[type=number]{padding:6px 8px;font-size:12px}
+.mana-row select{padding:6px 8px;font-size:13px}
+.mana-del{background:none;border:1px solid var(--bord);color:var(--muted);border-radius:4px;width:28px;height:30px;cursor:pointer;font-size:13px}
+.mana-del:hover{border-color:#A32D2D;color:#f09595}
+.mana-preview{display:flex;flex-wrap:wrap;gap:5px;min-height:30px;padding:4px 0;align-items:center}
+.mpip{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;border:2.5px solid}
+
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.chip{font-size:11px;padding:3px 8px;border-radius:20px;background:var(--surf2);border:1px solid var(--bord);color:var(--muted);cursor:pointer;transition:all .12s}
+.chip:hover{border-color:var(--gold);color:var(--gold-lt)}
+.btn{padding:8px 16px;border-radius:6px;font-size:12.5px;font-weight:500;cursor:pointer;border:1px solid;transition:all .14s;font-family:'Inter',sans-serif}
+.btn-gold{background:var(--gold);border-color:var(--gold);color:#1a0e00}
+.btn-gold:hover{background:var(--gold-lt)}
+.btn-out{background:transparent;border-color:var(--bord);color:var(--text)}
+.btn-out:hover{border-color:var(--gold);color:var(--gold-lt)}
+.brow{display:flex;gap:7px}
+.pray-row{display:grid;grid-template-columns:1fr auto;gap:5px;align-items:center}
+.pray-row input{font-size:11.5px;padding:6px 8px}
+.pray-del{background:none;border:1px solid var(--bord);color:var(--muted);border-radius:4px;width:26px;height:28px;cursor:pointer;font-size:12px}
+.pray-del:hover{border-color:#A32D2D;color:#f09595}
+.qf-code{background:var(--surf2);border:1px solid var(--bord);border-radius:6px;padding:10px 12px;font-family:'Courier New',monospace;font-size:11px;color:var(--gold-lt);line-height:1.9}
+.qf-in{width:100%;background:var(--surf2);border:1px solid var(--bord);color:var(--text);border-radius:6px;padding:8px 10px;font-size:11.5px;font-family:'Courier New',monospace;min-height:200px;resize:vertical;line-height:1.7}
+.qf-in:focus{outline:none;border-color:var(--gold)}
+.gal{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.gal-item{position:relative;cursor:pointer}
+.gal-item canvas{border-radius:7px;box-shadow:0 4px 18px rgba(0,0,0,.6);transition:transform .15s}
+.gal-item:hover canvas{transform:translateY(-3px)}
+.gal-del{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.8);border:none;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;display:none;align-items:center;justify-content:center}
+.gal-item:hover .gal-del{display:flex}
+.empty-gal{text-align:center;color:var(--muted);font-size:12px;padding:32px;line-height:1.7}
+.preview{display:flex;flex-direction:column;align-items:center;padding:28px 20px;gap:20px;overflow-y:auto;background:var(--bg)}
+.prev-label{font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;align-self:flex-start}
+canvas.main-card{border-radius:13px;box-shadow:0 10px 48px rgba(0,0,0,.8)}
+.export-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--surf);border:1px solid var(--bord);border-radius:var(--radius);width:100%;max-width:420px}
+.export-bar span{font-size:11.5px;color:var(--muted);flex:1}
+.sec-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+</style>
+</head>
+<body>
+
+<!-- CROP MODAL -->
+<div class="crop-modal" id="cropModal">
+  <h2>✂ Position &amp; Zoom Art</h2>
+  <div class="crop-stage" id="cropStage">
+    <canvas id="cropCanvas" width="560" height="350"></canvas>
+  </div>
+  <div class="crop-controls">
+    <label>
+      🔍 Zoom
+      <input type="range" id="zoomSlider" min="10" max="300" value="100" oninput="onZoomSlider()"/>
+      <span class="zoom-val" id="zoomVal">100%</span>
+    </label>
+    <button class="btn btn-out" onclick="resetCropView()">Reset view</button>
+  </div>
+  <div class="crop-hint">Drag to pan · Scroll or use slider to zoom · Move and zoom the image inside the rectangle to fit the card frame</div>
+  <div class="crop-btns">
+    <button class="btn btn-gold" onclick="applyCrop()">Apply</button>
+    <button class="btn btn-out" onclick="closeCrop()">Cancel</button>
+  </div>
+</div>
+
+<header>
+  <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+    <polygon points="13,2 16,9.5 24,9.5 18,14.5 20,22 13,17.5 6,22 8,14.5 2,9.5 10,9.5" fill="#c9921a" opacity=".18"/>
+    <polygon points="13,2 16,9.5 24,9.5 18,14.5 20,22 13,17.5 6,22 8,14.5 2,9.5 10,9.5" fill="none" stroke="#c9921a" stroke-width="1.2"/>
+  </svg>
+  <h1>Heaven's Arena</h1>
+  <span>Card Creator</span>
+</header>
+
+<div class="app">
+<div class="panel">
+  <div class="ptabs">
+    <button class="ptab on" onclick="switchTab('form',this)">Form</button>
+    <button class="ptab" onclick="switchTab('quick',this)">Quick-type</button>
+    <button class="ptab" onclick="switchTab('gallery',this)">Gallery</button>
+  </div>
+
+  <!-- FORM TAB -->
+  <div id="tab-form" class="pbody">
+    <div class="fl">
+      <label>Card art</label>
+      <div id="artEmpty" class="art-zone">
+        <input type="file" accept="image/*" id="artFileInput" onchange="onArtFile(this)"/>
+        <span class="az-icon">🖼</span>
+        <span class="az-txt">Click or drag image · PNG JPG WEBP</span>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Opens zoom &amp; pan crop tool</div>
+      </div>
+      <div id="artPreviewBox" class="art-preview-box" style="display:none">
+        <canvas id="artPreviewCanvas"></canvas>
+        <button class="replace-btn" onclick="triggerReplace()">Replace / Re-crop ✎</button>
+        <input type="file" accept="image/*" id="artReplaceInput" style="display:none" onchange="onArtFile(this)"/>
+      </div>
+    </div>
+
+    <div class="fl">
+      <label>Card type</label>
+      <select id="fType" onchange="onTypeChange()">
+        <option value="creature">Creature</option>
+        <option value="blessed">Blessed Creature</option>
+        <option value="spell">Spell</option>
+        <option value="relic">Relic</option>
+        <option value="terrain">Terrain</option>
+        <option value="god">God</option>
+      </select>
+    </div>
+
+    <div class="r2">
+      <div class="fl"><label>Name</label><input id="fName" type="text" placeholder="Titan of Cinders" oninput="render()"/></div>
+      <div class="fl"><label>Subtype</label><input id="fSub" type="text" placeholder="Colossus" oninput="render()"/></div>
+    </div>
+
+    <div id="colorSingle">
+      <div class="fl"><label>Element color</label>
+        <select id="fColor" onchange="render()">
+          <option value="fire">🔥 Fire</option><option value="water">💧 Water</option>
+          <option value="earth">🌿 Earth</option><option value="thunder">⚡ Thunder</option>
+          <option value="light">✨ Light</option><option value="dark">🌑 Dark</option>
+          <option value="mind">🔮 Mind</option><option value="undead">💀 Undead</option>
+        </select>
+      </div>
+    </div>
+    <div id="colorDual" style="display:none">
+      <div class="r2">
+        <div class="fl"><label>Primary color</label>
+          <select id="fColor1" onchange="render()">
+            <option value="fire">🔥 Fire</option><option value="water">💧 Water</option>
+            <option value="earth">🌿 Earth</option><option value="thunder">⚡ Thunder</option>
+            <option value="light">✨ Light</option><option value="dark">🌑 Dark</option>
+            <option value="mind">🔮 Mind</option><option value="undead">💀 Undead</option>
+          </select>
+        </div>
+        <div class="fl"><label>Secondary color</label>
+          <select id="fColor2" onchange="render()">
+            <option value="light">✨ Light</option><option value="fire">🔥 Fire</option>
+            <option value="water">💧 Water</option><option value="earth">🌿 Earth</option>
+            <option value="thunder">⚡ Thunder</option><option value="dark">🌑 Dark</option>
+            <option value="mind">🔮 Mind</option><option value="undead">💀 Undead</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="manaCostBlock">
+      <div class="fl">
+        <label>Mana cost</label>
+        <div class="hint">Add groups: choose amount + element. Pips show as colored emoji circles.</div>
+        <div class="mana-preview" id="manaPreview"></div>
+        <div class="mana-builder" id="manaBuilder"></div>
+        <button class="btn btn-out" style="margin-top:6px;font-size:11.5px;padding:6px 10px" onclick="addManaRow()">+ Add mana group</button>
+      </div>
+    </div>
+
+    <div id="statBlock">
+      <div class="r3">
+        <div class="fl"><label>ATK</label><input id="fAtk" type="number" value="4" min="0" max="30" oninput="render()"/></div>
+        <div class="fl"><label>HP</label><input id="fHp" type="number" value="8" min="0" max="30" oninput="render()"/></div>
+        <div class="fl"><label>MOV</label><input id="fMov" type="number" value="2" min="1" max="8" oninput="render()"/></div>
+      </div>
+      <div class="r2" style="margin-top:8px">
+        <div class="fl"><label>Level</label>
+          <select id="fLevel" onchange="render()"><option>1</option><option>2</option><option>3</option></select>
+        </div>
+        <div class="fl"><label>Creature type</label>
+          <select id="fCreatureType" onchange="render()">
+            <option value="warrior">Warrior</option><option value="colossus">Colossus</option>
+            <option value="magistus">Magistus</option><option value="duelist">Duelist</option>
+            <option value="assassin">Assassin</option><option value="guardian">Guardian</option>
+            <option value="archer">Archer</option><option value="beast">Beast</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="blessBlock" style="display:none">
+      <div class="r2">
+        <div class="fl"><label>Blessing current</label><input id="fBlessNow" type="number" value="0" min="0" max="10" oninput="render()"/></div>
+        <div class="fl"><label>Blessing max</label><input id="fBlessMax" type="number" value="5" min="1" max="10" oninput="render()"/></div>
+      </div>
+    </div>
+
+    <div id="prayBlock" style="display:none">
+      <div class="fl">
+        <label>Prayer quests</label>
+        <div id="prayList" style="display:flex;flex-direction:column;gap:5px;margin-bottom:6px"></div>
+        <button class="btn btn-out" style="font-size:11.5px;padding:6px 10px" onclick="addPrayer()">+ Add quest</button>
+      </div>
+    </div>
+
+    <div class="fl">
+      <label>Rules text</label>
+      <textarea id="fRules" placeholder="Taunt — Enemies must attack this creature first.&#10;Smite (2) — Deal 3 damage to one target." oninput="render()"></textarea>
+    </div>
+    <div class="fl">
+      <label>Quick keywords</label>
+      <div class="chips">
+        <span class="chip" onclick="addKw('Taunt')">Taunt</span>
+        <span class="chip" onclick="addKw('Rush')">Rush</span>
+        <span class="chip" onclick="addKw('Stealth')">Stealth</span>
+        <span class="chip" onclick="addKw('Flying')">Flying</span>
+        <span class="chip" onclick="addKw('Reach')">Reach</span>
+        <span class="chip" onclick="addKw('Lifesteal')">Lifesteal</span>
+        <span class="chip" onclick="addKw('Shield X')">Shield X</span>
+        <span class="chip" onclick="addKw('Burn X')">Burn X</span>
+        <span class="chip" onclick="addKw('Freeze')">Freeze</span>
+        <span class="chip" onclick="addKw('Stun')">Stun</span>
+        <span class="chip" onclick="addKw('Channel (X)')">Channel</span>
+        <span class="chip" onclick="addKw('Ward')">Ward</span>
+        <span class="chip" onclick="addKw('Resurrect')">Resurrect</span>
+        <span class="chip" onclick="addKw('Impassable')">Impassable</span>
+        <span class="chip" onclick="addKw('Vision Ward')">Vision Ward</span>
+        <span class="chip" onclick="addKw('Overload (X)')">Overload</span>
+      </div>
+    </div>
+    <div class="fl">
+      <label>Flavor text</label>
+      <input id="fFlavor" type="text" placeholder='"He stood at the gates of Olympus..."' oninput="render()"/>
+    </div>
+    <div class="brow">
+      <button class="btn btn-gold" onclick="saveCard()">Save to gallery</button>
+      <button class="btn btn-out" onclick="resetForm()">Reset</button>
+    </div>
+  </div>
+
+  <!-- QUICK-TYPE TAB -->
+  <div id="tab-quick" class="pbody" style="display:none">
+    <div class="fl"><label>Format reference</label>
+      <div class="qf-code">
+        name: Titan of Cinders<br>type: creature<br>subtype: Colossus<br>color: fire<br>
+        cost: 2fire 1any<br>atk: 4 | hp: 8 | mov: 2<br>level: 1<br>
+        rules: Taunt — Must be attacked first.<br>flavor: "He stood at the gates..."
+      </div>
+    </div>
+    <div class="fl"><label>Type your card</label>
+      <textarea class="qf-in" id="qfIn" placeholder="name: My Card&#10;type: creature&#10;color: fire&#10;cost: 2fire 1any&#10;atk: 4 | hp: 8 | mov: 2&#10;level: 1&#10;rules: Taunt — Must be attacked first." oninput="parseQuick()"></textarea>
+    </div>
+    <div class="fl"><label>Card art</label>
+      <div class="art-zone">
+        <input type="file" accept="image/*" onchange="onArtFile(this)"/>
+        <span class="az-icon">🖼</span><span class="az-txt">Opens zoom &amp; pan crop tool</span>
+      </div>
+    </div>
+    <div class="brow">
+      <button class="btn btn-gold" onclick="saveCard()">Save to gallery</button>
+      <button class="btn btn-out" onclick="document.getElementById('qfIn').value='';parseQuick()">Clear</button>
+    </div>
+  </div>
+
+  <!-- GALLERY TAB -->
+  <div id="tab-gallery" class="pbody" style="display:none">
+    <div class="sec-label">Saved cards</div>
+    <div id="galList"><div class="empty-gal">No cards saved yet.<br/>Build a card and click "Save to gallery".</div></div>
+    <div class="brow">
+      <button class="btn btn-gold" onclick="exportAll()">Export all as PNG</button>
+    </div>
+  </div>
+</div>
+
+<!-- PREVIEW -->
+<div class="preview">
+  <div class="prev-label">Live preview</div>
+  <canvas id="mainCanvas" class="main-card" width="260" height="380"></canvas>
+  <div class="export-bar">
+    <span>Save to gallery to keep, then export.</span>
+    <button class="btn btn-out" onclick="dlCurrent()">⬇ Download PNG</button>
+  </div>
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// PALETTES
+// ═══════════════════════════════════════
+const PAL = {
+  fire:    {frame:'#6b1500',border:'#c44020',inner:'#3d0e00',art:'#1e0600',namebg:'#120400',text:'#f09575',rule:'#e8d8b0',tag:'#6b1500',pip:'#c44020',pipBg:'rgba(180,50,0,0.55)',pipBorder:'#e06030'},
+  water:   {frame:'#032240',border:'#1460a0',inner:'#031830',art:'#020c1c',namebg:'#010810',text:'#78aae0',rule:'#e8d8b0',tag:'#032240',pip:'#1460a0',pipBg:'rgba(10,80,160,0.55)',pipBorder:'#3a8ad0'},
+  earth:   {frame:'#122800',border:'#356010',inner:'#0c1e00',art:'#071200',namebg:'#040e00',text:'#a8cc70',rule:'#e8d8b0',tag:'#122800',pip:'#356010',pipBg:'rgba(40,90,10,0.55)',pipBorder:'#60a030'},
+  thunder: {frame:'#0c1840',border:'#2850a8',inner:'#081030',art:'#040c20',namebg:'#020810',text:'#80a8e8',rule:'#e8d8b0',tag:'#0c1840',pip:'#2850a8',pipBg:'rgba(20,60,160,0.55)',pipBorder:'#5080d8'},
+  light:   {frame:'#3a2000',border:'#b87808',inner:'#281600',art:'#180e00',namebg:'#100800',text:'#e8b850',rule:'#e8d8b0',tag:'#3a2000',pip:'#b87808',pipBg:'rgba(160,100,0,0.55)',pipBorder:'#e0b030'},
+  dark:    {frame:'#1a1230',border:'#4a4090',inner:'#120c22',art:'#0a0818',namebg:'#080614',text:'#a090d8',rule:'#e8d8b0',tag:'#1a1230',pip:'#4a4090',pipBg:'rgba(50,40,120,0.55)',pipBorder:'#8070c8'},
+  mind:    {frame:'#200830',border:'#7828b8',inner:'#160520',art:'#0e0318',namebg:'#0a0212',text:'#d090e8',rule:'#e8d8b0',tag:'#200830',pip:'#7828b8',pipBg:'rgba(100,20,160,0.55)',pipBorder:'#c060e0'},
+  undead:  {frame:'#101410',border:'#385038',inner:'#0a0e0a',art:'#060a06',namebg:'#040604',text:'#80a878',rule:'#e8d8b0',tag:'#101410',pip:'#385038',pipBg:'rgba(40,70,40,0.55)',pipBorder:'#60a060'},
+};
+
+const MANA_EMOJI = {fire:'🔥',water:'💧',earth:'🌿',thunder:'⚡',light:'✨',dark:'🌑',mind:'🔮',undead:'💀',any:'⬡'};
+const MANA_PIP_BG = {
+  fire:'rgba(180,50,0,0.7)',water:'rgba(10,80,160,0.7)',earth:'rgba(40,90,10,0.7)',
+  thunder:'rgba(20,60,160,0.7)',light:'rgba(160,100,0,0.7)',dark:'rgba(50,40,120,0.7)',
+  mind:'rgba(100,20,160,0.7)',undead:'rgba(40,70,40,0.7)',any:'rgba(60,55,45,0.7)'
+};
+const MANA_PIP_BORDER = {
+  fire:'#e06030',water:'#3a8ad0',earth:'#60a030',thunder:'#5080d8',
+  light:'#e0b030',dark:'#8070c8',mind:'#c060e0',undead:'#60a060',any:'#8a7850'
+};
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let artCanvas = null;
+let gallery = [];
+let manaRows = [{amt:2,color:'fire'},{amt:1,color:'any'}];
+let prayers = ['Summon 3 creatures of this element.','Destroy 2 enemy creatures.','Cast 2 matching spells.'];
+
+// ═══════════════════════════════════════
+// CROP / PAN / ZOOM STATE
+// ═══════════════════════════════════════
+let cropSrc = null;        // raw Image object
+let cropOffX = 0, cropOffY = 0;   // pan offset in image-space pixels
+let cropZoom = 1.0;        // scale factor (image displayed at this zoom)
+let cropDragging = false;
+let cropLastX = 0, cropLastY = 0;
+
+// The card art frame dimensions (at 2× resolution for sharpness)
+const CROP_FRAME_W = 488;   // display px in modal
+const CROP_FRAME_H = 306;   // 1/3 of card proportional
+// card art actual ratio used on card: (W-16) × artH  = 244 × 126 on card
+
+function onArtFile(input){
+  const f = input.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => openCrop(img);
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(f);
+}
+
+function openCrop(img){
+  cropSrc = img;
+  // fit image to crop stage initially
+  const scaleW = CROP_FRAME_W / img.width;
+  const scaleH = CROP_FRAME_H / img.height;
+  cropZoom = Math.max(scaleW, scaleH); // fill frame
+  // center
+  cropOffX = (img.width - CROP_FRAME_W / cropZoom) / 2;
+  cropOffY = (img.height - CROP_FRAME_H / cropZoom) / 2;
+  document.getElementById('zoomSlider').value = Math.round(cropZoom * 100);
+  document.getElementById('zoomVal').textContent = Math.round(cropZoom * 100) + '%';
+  document.getElementById('cropModal').classList.add('open');
+  setupCropEvents();
+  drawCropCanvas();
+}
+
+function drawCropCanvas(){
+  const cv = document.getElementById('cropCanvas');
+  const stg = document.getElementById('cropStage');
+  cv.width = CROP_FRAME_W;
+  cv.height = CROP_FRAME_H;
+  stg.style.width = CROP_FRAME_W + 'px';
+  stg.style.height = CROP_FRAME_H + 'px';
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0,0,CROP_FRAME_W,CROP_FRAME_H);
+  if(!cropSrc) return;
+
+  // draw image at current pan/zoom
+  const sx = cropOffX, sy = cropOffY;
+  const sw = CROP_FRAME_W / cropZoom, sh = CROP_FRAME_H / cropZoom;
+  ctx.drawImage(cropSrc, sx, sy, sw, sh, 0, 0, CROP_FRAME_W, CROP_FRAME_H);
+
+  // gold rectangle border = the whole frame (what you get IS the card art)
+  ctx.strokeStyle = '#f0c060';
+  ctx.lineWidth = 3;
+  ctx.shadowColor = '#f0c060';
+  ctx.shadowBlur = 8;
+  ctx.strokeRect(1.5, 1.5, CROP_FRAME_W-3, CROP_FRAME_H-3);
+  ctx.shadowBlur = 0;
+
+  // corner marks
+  const m = 18;
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 2;
+  [[0,0],[CROP_FRAME_W,0],[0,CROP_FRAME_H],[CROP_FRAME_W,CROP_FRAME_H]].forEach(([cx,cy])=>{
+    const dx = cx===0?1:-1, dy = cy===0?1:-1;
+    ctx.beginPath();ctx.moveTo(cx+dx*2,cy+dy*(m+2));ctx.lineTo(cx+dx*2,cy+dy*2);ctx.lineTo(cx+dx*(m+2),cy+dy*2);ctx.stroke();
+  });
+}
+
+function clampOffset(){
+  if(!cropSrc) return;
+  const visW = CROP_FRAME_W / cropZoom;
+  const visH = CROP_FRAME_H / cropZoom;
+  cropOffX = Math.max(0, Math.min(cropOffX, cropSrc.width - visW));
+  cropOffY = Math.max(0, Math.min(cropOffY, cropSrc.height - visH));
+}
+
+function setupCropEvents(){
+  const stg = document.getElementById('cropStage');
+  // remove old by replacing node
+  const ns = stg.cloneNode(true);
+  stg.parentNode.replaceChild(ns, stg);
+  // re-get canvas reference
+  const cv = document.getElementById('cropCanvas');
+
+  // MOUSE
+  ns.addEventListener('mousedown', e=>{
+    e.preventDefault();
+    cropDragging=true; cropLastX=e.clientX; cropLastY=e.clientY;
+    ns.style.cursor='grabbing';
+  });
+  window.addEventListener('mousemove', e=>{
+    if(!cropDragging) return;
+    const dx = (e.clientX - cropLastX) / cropZoom;
+    const dy = (e.clientY - cropLastY) / cropZoom;
+    cropOffX -= dx; cropOffY -= dy;
+    cropLastX = e.clientX; cropLastY = e.clientY;
+    clampOffset(); drawCropCanvas();
+  });
+  window.addEventListener('mouseup', ()=>{ cropDragging=false; ns.style.cursor='move'; });
+
+  // SCROLL ZOOM
+  ns.addEventListener('wheel', e=>{
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newZ = Math.max(0.1, Math.min(cropZoom*delta, 10));
+    // zoom toward cursor
+    const rect = ns.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / cropZoom + cropOffX;
+    const my = (e.clientY - rect.top) / cropZoom + cropOffY;
+    cropZoom = newZ;
+    cropOffX = mx - (e.clientX - rect.left) / cropZoom;
+    cropOffY = my - (e.clientY - rect.top) / cropZoom;
+    clampOffset();
+    document.getElementById('zoomSlider').value = Math.round(cropZoom*100);
+    document.getElementById('zoomVal').textContent = Math.round(cropZoom*100)+'%';
+    drawCropCanvas();
+  },{passive:false});
+
+  // TOUCH PAN
+  let lastTouches = [];
+  ns.addEventListener('touchstart', e=>{
+    e.preventDefault();
+    lastTouches = Array.from(e.touches);
+  },{passive:false});
+  ns.addEventListener('touchmove', e=>{
+    e.preventDefault();
+    const touches = Array.from(e.touches);
+    if(touches.length===1 && lastTouches.length===1){
+      const dx=(touches[0].clientX-lastTouches[0].clientX)/cropZoom;
+      const dy=(touches[0].clientY-lastTouches[0].clientY)/cropZoom;
+      cropOffX-=dx; cropOffY-=dy;
+      clampOffset(); drawCropCanvas();
+    } else if(touches.length===2 && lastTouches.length===2){
+      // pinch zoom
+      const d0=Math.hypot(lastTouches[1].clientX-lastTouches[0].clientX,lastTouches[1].clientY-lastTouches[0].clientY);
+      const d1=Math.hypot(touches[1].clientX-touches[0].clientX,touches[1].clientY-touches[0].clientY);
+      const ratio=d1/d0;
+      cropZoom=Math.max(0.1,Math.min(cropZoom*ratio,10));
+      clampOffset(); drawCropCanvas();
+      document.getElementById('zoomSlider').value=Math.round(cropZoom*100);
+      document.getElementById('zoomVal').textContent=Math.round(cropZoom*100)+'%';
+    }
+    lastTouches=touches;
+  },{passive:false});
+}
+
+function onZoomSlider(){
+  if(!cropSrc) return;
+  const v = parseInt(document.getElementById('zoomSlider').value)/100;
+  // zoom toward center of view
+  const cx = cropOffX + (CROP_FRAME_W/cropZoom)/2;
+  const cy = cropOffY + (CROP_FRAME_H/cropZoom)/2;
+  cropZoom = v;
+  cropOffX = cx - (CROP_FRAME_W/cropZoom)/2;
+  cropOffY = cy - (CROP_FRAME_H/cropZoom)/2;
+  clampOffset();
+  document.getElementById('zoomVal').textContent = Math.round(v*100)+'%';
+  drawCropCanvas();
+}
+
+function resetCropView(){
+  if(!cropSrc) return;
+  const scaleW = CROP_FRAME_W / cropSrc.width;
+  const scaleH = CROP_FRAME_H / cropSrc.height;
+  cropZoom = Math.max(scaleW,scaleH);
+  cropOffX = (cropSrc.width - CROP_FRAME_W/cropZoom)/2;
+  cropOffY = (cropSrc.height - CROP_FRAME_H/cropZoom)/2;
+  document.getElementById('zoomSlider').value = Math.round(cropZoom*100);
+  document.getElementById('zoomVal').textContent = Math.round(cropZoom*100)+'%';
+  drawCropCanvas();
+}
+
+function applyCrop(){
+  if(!cropSrc) return;
+  // render the visible region into artCanvas
+  const OUTPUT_W = 488, OUTPUT_H = 306; // hi-res output
+  artCanvas = document.createElement('canvas');
+  artCanvas.width = OUTPUT_W; artCanvas.height = OUTPUT_H;
+  const ctx = artCanvas.getContext('2d');
+  const sx = cropOffX, sy = cropOffY;
+  const sw = CROP_FRAME_W/cropZoom, sh = CROP_FRAME_H/cropZoom;
+  ctx.drawImage(cropSrc, sx, sy, sw, sh, 0, 0, OUTPUT_W, OUTPUT_H);
+  // show preview in panel
+  const pv = document.getElementById('artPreviewCanvas');
+  pv.width = 356; pv.height = 120;
+  pv.getContext('2d').drawImage(artCanvas,0,0,OUTPUT_W,OUTPUT_H,0,0,356,120);
+  document.getElementById('artEmpty').style.display='none';
+  document.getElementById('artPreviewBox').style.display='block';
+  closeCrop();
+  render();
+}
+
+function closeCrop(){ document.getElementById('cropModal').classList.remove('open'); }
+function triggerReplace(){ document.getElementById('artReplaceInput').click(); }
+
+// ═══════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════
+function switchTab(id,btn){
+  document.querySelectorAll('.pbody').forEach(t=>t.style.display='none');
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('tab-'+id).style.display='flex';
+  btn.classList.add('on');
+}
+
+// ═══════════════════════════════════════
+// TYPE CHANGE
+// ═══════════════════════════════════════
+function onTypeChange(){
+  const t=document.getElementById('fType').value;
+  document.getElementById('statBlock').style.display=['creature','blessed'].includes(t)?'':'none';
+  document.getElementById('blessBlock').style.display=t==='blessed'?'':'none';
+  document.getElementById('prayBlock').style.display=t==='god'?'':'none';
+  document.getElementById('colorSingle').style.display=t==='god'?'none':'';
+  document.getElementById('colorDual').style.display=t==='god'?'':'none';
+  document.getElementById('manaCostBlock').style.display=t==='god'?'none':'';
+  if(t==='god') buildPrayerUI();
+  render();
+}
+
+// ═══════════════════════════════════════
+// MANA BUILDER
+// ═══════════════════════════════════════
+function buildManaUI(){
+  const el=document.getElementById('manaBuilder');
+  el.innerHTML='';
+  manaRows.forEach((row,i)=>{
+    const div=document.createElement('div'); div.className='mana-row';
+    const opts=['fire','water','earth','thunder','light','dark','mind','undead','any'].map(c=>
+      `<option value="${c}"${row.color===c?' selected':''}>${MANA_EMOJI[c]} ${c.charAt(0).toUpperCase()+c.slice(1)}</option>`
+    ).join('');
+    div.innerHTML=`
+      <input type="number" min="1" max="9" value="${row.amt}" oninput="manaRows[${i}].amt=+this.value;updateManaPreview();render()" style="background:#1d1b17;border:1px solid #2e2a22;color:#ede3c8;border-radius:5px;padding:6px 7px;font-size:12px;font-family:Inter,sans-serif"/>
+      <select onchange="manaRows[${i}].color=this.value;updateManaPreview();render()" style="background:#1d1b17;border:1px solid #2e2a22;color:#ede3c8;border-radius:5px;padding:6px 7px;font-size:13px;font-family:Inter,sans-serif">${opts}</select>
+      <button class="mana-del" onclick="manaRows.splice(${i},1);buildManaUI();updateManaPreview();render()">✕</button>`;
+    el.appendChild(div);
+  });
+  updateManaPreview();
+}
+function addManaRow(){manaRows.push({amt:1,color:'any'});buildManaUI();render();}
+function updateManaPreview(){
+  const el=document.getElementById('manaPreview');
+  el.innerHTML='';
+  manaRows.forEach(row=>{
+    const e=MANA_EMOJI[row.color]||'⬡';
+    const bg=MANA_PIP_BG[row.color]||'rgba(60,55,45,0.7)';
+    const bd=MANA_PIP_BORDER[row.color]||'#8a7850';
+    for(let i=0;i<Math.min(row.amt,9);i++){
+      const pip=document.createElement('div');
+      pip.className='mpip';
+      pip.style.cssText=`background:${bg};border-color:${bd}`;
+      pip.textContent=e;
+      pip.title=row.color+' mana';
+      el.appendChild(pip);
+    }
+  });
+}
+
+// ═══════════════════════════════════════
+// PRAYER UI
+// ═══════════════════════════════════════
+function buildPrayerUI(){
+  const el=document.getElementById('prayList');
+  el.innerHTML='';
+  prayers.forEach((p,i)=>{
+    const row=document.createElement('div'); row.className='pray-row';
+    row.innerHTML=`<input type="text" value="${p}" oninput="prayers[${i}]=this.value;render()" style="background:#1d1b17;border:1px solid #2e2a22;color:#ede3c8;border-radius:5px;padding:6px 8px;font-size:11.5px;font-family:Inter,sans-serif"/>
+      <button class="pray-del" onclick="prayers.splice(${i},1);buildPrayerUI();render()">✕</button>`;
+    el.appendChild(row);
+  });
+}
+function addPrayer(){prayers.push('New prayer quest.');buildPrayerUI();render();}
+
+// ═══════════════════════════════════════
+// KEYWORDS
+// ═══════════════════════════════════════
+function addKw(kw){
+  const el=document.getElementById('fRules');
+  el.value=(el.value.trim()?el.value.trim()+'\n':'')+kw+' — ';
+  render(); el.focus();
+}
+
+// ═══════════════════════════════════════
+// QUICK PARSE
+// ═══════════════════════════════════════
+function parseQuick(){
+  const txt=document.getElementById('qfIn').value;
+  const lines=txt.split('\n');
+  const get=k=>{const l=lines.find(l=>l.toLowerCase().startsWith(k+':'));return l?l.slice(k.length+1).trim():''};
+  const sv=(id,v)=>{if(v&&document.getElementById(id))document.getElementById(id).value=v;};
+  sv('fName',get('name'));sv('fSub',get('subtype'));sv('fFlavor',get('flavor').replace(/^["']|["']$/g,''));
+  const tp=get('type').toLowerCase();if(tp){sv('fType',tp);onTypeChange();}
+  const col=get('color').toLowerCase();if(col)sv('fColor',col);
+  const m=txt.match(/atk:\s*(\d+)/i);if(m)sv('fAtk',m[1]);
+  const m2=txt.match(/hp:\s*(\d+)/i);if(m2)sv('fHp',m2[1]);
+  const m3=txt.match(/mov:\s*(\d+)/i);if(m3)sv('fMov',m3[1]);
+  const m4=txt.match(/level:\s*(\d+)/i);if(m4)sv('fLevel',m4[1]);
+  const costStr=get('cost');
+  if(costStr){
+    manaRows=[];
+    costStr.split(/\s+/).forEach(part=>{
+      const mc=part.match(/^(\d+)(\w+)$/);
+      if(mc) manaRows.push({amt:parseInt(mc[1]),color:mc[2]==='any'?'any':mc[2].toLowerCase()});
+    });
+    buildManaUI();
+  }
+  const rls=lines.filter(l=>l.toLowerCase().startsWith('rules:')).map(l=>l.slice(6).trim());
+  if(rls.length)sv('fRules',rls.join('\n'));
+  render();
+}
+
+// ═══════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════
+function resetForm(){
+  ['fName','fSub','fRules','fFlavor'].forEach(id=>document.getElementById(id).value='');
+  ['fAtk','fHp'].forEach(id=>document.getElementById(id).value=4);
+  document.getElementById('fMov').value=2;
+  document.getElementById('fLevel').value=1;
+  manaRows=[{amt:2,color:'fire'},{amt:1,color:'any'}];
+  buildManaUI(); artCanvas=null;
+  document.getElementById('artEmpty').style.display='';
+  document.getElementById('artPreviewBox').style.display='none';
+  render();
+}
+
+// ═══════════════════════════════════════
+// GALLERY
+// ═══════════════════════════════════════
+function saveCard(){
+  const cv=document.getElementById('mainCanvas');
+  gallery.push({url:cv.toDataURL(),name:document.getElementById('fName').value||'Card '+(gallery.length+1)});
+  renderGallery();
+}
+function renderGallery(){
+  const el=document.getElementById('galList');
+  if(!gallery.length){el.innerHTML='<div class="empty-gal">No cards saved yet.</div>';return;}
+  el.innerHTML='';
+  const wrap=document.createElement('div'); wrap.className='gal';
+  gallery.forEach((c,i)=>{
+    const item=document.createElement('div'); item.className='gal-item';
+    const cv=document.createElement('canvas'); cv.width=110; cv.height=154;
+    const ctx=cv.getContext('2d'); const img=new Image();
+    img.onload=()=>ctx.drawImage(img,0,0,110,154); img.src=c.url;
+    const del=document.createElement('button'); del.className='gal-del'; del.textContent='✕';
+    del.onclick=()=>{gallery.splice(i,1);renderGallery();};
+    item.appendChild(cv); item.appendChild(del); item.title=c.name;
+    wrap.appendChild(item);
+  });
+  el.appendChild(wrap);
+}
+function dlCurrent(){
+  const cv=document.getElementById('mainCanvas');
+  const a=document.createElement('a');
+  a.download=(document.getElementById('fName').value||'card')+'.png';
+  a.href=cv.toDataURL(); a.click();
+}
+function exportAll(){
+  gallery.forEach((c,i)=>setTimeout(()=>{
+    const a=document.createElement('a');
+    a.download=(c.name||'card_'+i)+'.png'; a.href=c.url; a.click();
+  },i*300));
+}
+
+// ═══════════════════════════════════════
+// CANVAS HELPERS
+// ═══════════════════════════════════════
+function rr(ctx,x,y,w,h,r,fill,stroke,sw){
+  ctx.beginPath();ctx.roundRect(x,y,w,h,r);
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=sw||1;ctx.stroke();}
+}
+function circ(ctx,cx,cy,r,fill,stroke,sw){
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=sw||1;ctx.stroke();}
+}
+function clipRR(ctx,x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.clip();}
+function txt(ctx,str,x,y,font,color,align,maxW){
+  ctx.font=font; ctx.fillStyle=color; ctx.textAlign=align||'left';
+  if(maxW){
+    let s=String(str);
+    while(ctx.measureText(s).width>maxW&&s.length>0)s=s.slice(0,-1);
+    if(s!==String(str))s=s.slice(0,-1)+'…';
+    ctx.fillText(s,x,y);
+  } else ctx.fillText(String(str),x,y);
+  ctx.textAlign='left';
+}
+function lighten(hex,amt){
+  const r=parseInt(hex.slice(1,3),16)||0,g=parseInt(hex.slice(3,5),16)||0,b=parseInt(hex.slice(5,7),16)||0;
+  return '#'+[Math.min(255,r+amt),Math.min(255,g+amt),Math.min(255,b+amt)].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+
+// Draw a single mana emoji pip WITH colored circle on canvas
+function drawManaPip(ctx, emoji, cx, cy, bgColor, borderColor){
+  circ(ctx,cx,cy,9,bgColor,null,0);
+  ctx.strokeStyle=borderColor; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(cx,cy,9,0,Math.PI*2); ctx.stroke();
+  ctx.font='11px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(emoji,cx,cy+1);
+  ctx.textBaseline='alphabetic'; ctx.textAlign='left';
+}
+
+// ═══════════════════════════════════════
+// TEXT WRAP
+// ═══════════════════════════════════════
+function wrapText(ctx,text,maxW,fontSize){
+  ctx.font=`${fontSize}px 'Crimson Text',Georgia,serif`;
+  const words=text.split(' '); const lines=[]; let cur='';
+  words.forEach(w=>{
+    const test=cur?cur+' '+w:w;
+    if(ctx.measureText(test).width>maxW&&cur){lines.push(cur);cur=w;}else cur=test;
+  });
+  if(cur)lines.push(cur); return lines;
+}
+function rulesLines(rules,ctx,maxW){
+  if(!rules)return[];
+  const result=[];
+  rules.split('\n').forEach(line=>{
+    wrapText(ctx,line,maxW,10).forEach((l,i)=>result.push({text:l,first:i===0}));
+  });
+  return result;
+}
+
+// ═══════════════════════════════════════
+// STAR DRAW
+// ═══════════════════════════════════════
+function drawStar(ctx,cx,cy,outerR,innerR,pts,color){
+  ctx.fillStyle=color; ctx.beginPath();
+  for(let i=0;i<pts*2;i++){
+    const r=i%2===0?outerR:innerR;
+    const a=(i*Math.PI/pts)-Math.PI/2;
+    i===0?ctx.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a)):ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));
+  }
+  ctx.closePath(); ctx.fill();
+}
+
+// ═══════════════════════════════════════
+// MAIN RENDER
+// ═══════════════════════════════════════
+function render(){
+  const cv=document.getElementById('mainCanvas');
+  const ctx=cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+
+  const type=document.getElementById('fType').value;
+  const isGod=type==='god';
+  const color=isGod?document.getElementById('fColor1').value:document.getElementById('fColor').value;
+  const color2=isGod?document.getElementById('fColor2').value:null;
+  const P=PAL[color]||PAL.fire;
+  const P2=isGod&&color2?PAL[color2]:null;
+
+  // OUTER FRAME
+  if(isGod&&P2){
+    const g=ctx.createLinearGradient(0,0,W,0);
+    g.addColorStop(0,P.frame); g.addColorStop(1,P2.frame);
+    ctx.beginPath(); ctx.roundRect(0,0,W,H,13); ctx.fillStyle=g; ctx.fill();
+    const g2=ctx.createLinearGradient(0,0,W,0);
+    g2.addColorStop(0,P.border); g2.addColorStop(1,P2.border);
+    ctx.beginPath(); ctx.roundRect(2,2,W-4,H-4,11); ctx.strokeStyle=g2; ctx.lineWidth=2; ctx.stroke();
+  } else {
+    rr(ctx,0,0,W,H,13,P.frame);
+    rr(ctx,2,2,W-4,H-4,11,null,P.border,2);
+  }
+  rr(ctx,4,4,W-8,H-8,10,P.inner);
+
+  // ART ZONE — top 1/3
+  const artY=12, artH=Math.round(H*0.33);
+  rr(ctx,8,artY,W-16,artH,4,P.art);
+  if(artCanvas){
+    ctx.save(); clipRR(ctx,8,artY,W-16,artH,4);
+    const sc=Math.max((W-16)/artCanvas.width, artH/artCanvas.height);
+    const dw=artCanvas.width*sc, dh=artCanvas.height*sc;
+    ctx.drawImage(artCanvas, 8+((W-16)-dw)/2, artY+(artH-dh)/2, dw, dh);
+    ctx.restore();
+  } else {
+    drawArtPlaceholder(ctx,P,type,8,artY,W-16,artH);
+  }
+  rr(ctx,8,artY,W-16,artH,4,null,P.border,0.8);
+
+  // HP badge top-right on art (creatures)
+  if(!isGod&&['creature','blessed'].includes(type)){
+    const hp=document.getElementById('fHp').value||'—';
+    rr(ctx,W-36,artY+4,28,22,4,P.inner,P.border,1);
+    txt(ctx,'HP',W-22,artY+12,'bold 6px Cinzel,serif',P.text,'center');
+    txt(ctx,hp,W-22,artY+23,'bold 9px Cinzel,serif',P.text,'center');
+  }
+
+  // NAME BAR
+  const nameY=artY+artH+2;
+  rr(ctx,8,nameY,W-16,18,2,P.namebg);
+  const name=document.getElementById('fName').value||'Card Name';
+  txt(ctx,name,13,nameY+13,'bold 10.5px Cinzel,serif',P.text,'left',W-60);
+
+  // Mana pips on name bar (emoji with colored circles)
+  if(!isGod){
+    const allPips=[];
+    manaRows.forEach(row=>{
+      const e=MANA_EMOJI[row.color]||'⬡';
+      const bg=MANA_PIP_BG[row.color]||'rgba(60,55,45,0.7)';
+      const bd=MANA_PIP_BORDER[row.color]||'#8a7850';
+      for(let i=0;i<Math.min(row.amt,8);i++) allPips.push({e,bg,bd});
+    });
+    let px=W-14;
+    allPips.reverse().forEach(p=>{
+      drawManaPip(ctx,p.e,px-4,nameY+9,p.bg,p.bd);
+      px-=20;
+    });
+  } else {
+    // God — two large pips
+    const e1=MANA_EMOJI[color]||'✨';
+    const e2=MANA_EMOJI[color2||'light']||'✨';
+    const bg1=MANA_PIP_BG[color], bd1=MANA_PIP_BORDER[color];
+    const bg2=MANA_PIP_BG[color2||'light'], bd2=MANA_PIP_BORDER[color2||'light'];
+    drawManaPip(ctx,e1,W-26,nameY+9,bg1,bd1);
+    drawManaPip(ctx,e2,W-10,nameY+9,bg2,bd2);
+  }
+
+  // TYPE LINE
+  const typeY=nameY+20;
+  rr(ctx,8,typeY,W-16,13,1,P.art);
+  const sub=document.getElementById('fSub').value||defSub(type);
+  const cname=color.charAt(0).toUpperCase()+color.slice(1);
+  let typeLine='';
+  if(['creature','blessed'].includes(type)){
+    const ct=document.getElementById('fCreatureType').value;
+    const lv=document.getElementById('fLevel').value;
+    typeLine=`${cname} ${ct.charAt(0).toUpperCase()+ct.slice(1)}${sub?' · '+sub:''} · Lv ${lv}`;
+  } else if(type==='spell') typeLine=`Spell — ${cname}${sub?' · '+sub:''}`;
+  else if(type==='relic')   typeLine=`Relic — ${cname}${sub?' · '+sub:''}`;
+  else if(type==='terrain') typeLine=`Terrain — ${cname}${sub?' · '+sub:''}`;
+  else if(type==='god'){
+    const c2n=(color2||'light').charAt(0).toUpperCase()+(color2||'light').slice(1);
+    typeLine=`God · ${cname} / ${c2n}${sub?' · '+sub:''}`;
+  }
+  txt(ctx,typeLine,W/2,typeY+9.5,'italic 8px Crimson Text,Georgia,serif',P.text,'center',W-20);
+
+  // TEXT BOX
+  const tbY=typeY+15;
+  const footerH=18; // footer strip
+  const statsH=isGod?0:20;
+  const tbH=H-tbY-statsH-footerH-8;
+  rr(ctx,8,tbY,W-16,tbH,3,P.rule);
+  rr(ctx,8,tbY,W-16,tbH,3,null,P.art,0.7);
+
+  // type tag pill
+  const tagLabel=({creature:'Creature',blessed:'Blessed Creature',spell:'Spell',relic:'Relic',terrain:'Terrain',god:'God Card'})[type]||type;
+  ctx.font='bold 6px Inter,sans-serif';
+  const tgW=ctx.measureText(tagLabel.toUpperCase()).width+12;
+  rr(ctx,11,tbY+4,tgW,10,2,P.tag);
+  txt(ctx,tagLabel.toUpperCase(),14,tbY+12,'bold 6px Inter,sans-serif',P.text,'left');
+
+  // Prayer quests (god only)
+  let textStartY=tbY+20;
+  if(isGod){
+    txt(ctx,'Prayer quests (complete all to summon)',12,textStartY,'600 7px Inter,sans-serif','#5a3010','left',W-20);
+    textStartY+=13;
+    prayers.forEach((p,i)=>{
+      circ(ctx,17,textStartY-3,5,P.tag,lighten(P.tag,40),1);
+      txt(ctx,String(i+1),17,textStartY,'bold 6.5px Cinzel,serif',P.text,'center');
+      txt(ctx,p,26,textStartY,'9px Crimson Text,Georgia,serif','#2a1200','left',W-34);
+      textStartY+=12;
+    });
+    ctx.strokeStyle='#9a7040'; ctx.lineWidth=0.5;
+    ctx.beginPath(); ctx.moveTo(11,textStartY+2); ctx.lineTo(W-11,textStartY+2); ctx.stroke();
+    textStartY+=8;
+  }
+
+  // Rules text
+  const rules=document.getElementById('fRules').value;
+  const rl=rulesLines(rules,ctx,W-28);
+  let ry=textStartY;
+  rl.forEach(line=>{
+    if(ry>tbY+tbH-18) return;
+    const dashIdx=line.text.indexOf(' — ');
+    if(line.first&&dashIdx>0){
+      const kw=line.text.slice(0,dashIdx);
+      const rest=line.text.slice(dashIdx);
+      ctx.font='bold 10px Crimson Text,Georgia,serif';
+      ctx.fillStyle=P.tag;
+      const kwW=ctx.measureText(kw).width;
+      ctx.fillText(kw,12,ry);
+      ctx.font='10px Crimson Text,Georgia,serif';
+      ctx.fillStyle='#2a1200';
+      ctx.fillText(rest,12+kwW,ry);
+    } else {
+      txt(ctx,line.text,12,ry,'10px Crimson Text,Georgia,serif','#2a1200','left',W-24);
+    }
+    ry+=11;
+  });
+
+  // Flavor text
+  const flavor=document.getElementById('fFlavor').value;
+  if(flavor){
+    const flavorY=tbY+tbH-14;
+    ctx.strokeStyle='#9a7040'; ctx.lineWidth=0.5;
+    ctx.beginPath(); ctx.moveTo(11,flavorY-4); ctx.lineTo(W-11,flavorY-4); ctx.stroke();
+    txt(ctx,flavor,W/2,flavorY+4,'italic 9px Crimson Text,Georgia,serif','#5a3010','center',W-24);
+  }
+
+  // Blessed bar
+  if(type==='blessed'){
+    const bn=parseInt(document.getElementById('fBlessNow').value)||0;
+    const bm=parseInt(document.getElementById('fBlessMax').value)||5;
+    const barY=tbY+tbH-18;
+    rr(ctx,11,barY,W-22,7,3,P.art);
+    rr(ctx,11,barY,Math.max(4,(W-22)*Math.min(bn/bm,1)),7,3,P.border);
+    txt(ctx,`Blessing ${bn}/${bm}`,12,barY+6,'6px Inter,sans-serif',P.text,'left');
+    txt(ctx,`Active at ${bm}`,W-12,barY+6,'6px Inter,sans-serif',P.text,'right',80);
+  }
+
+  // ════════════════════════════
+  // STATS BAR + FOOTER (combined bottom strip for creatures)
+  // Layout: [⚔ ATK]  [★ Heaven's Arena ★]  [👣 MOV]
+  // ════════════════════════════
+  const bottomStripY = H - statsH - footerH - 4;
+
+  if(!isGod){
+    if(['creature','blessed'].includes(type)){
+      // Single strip combining stats + branding
+      const stripH = statsH + footerH;
+      rr(ctx,8,bottomStripY,W-16,stripH,3,P.namebg);
+
+      // ATK — left
+      const atk=document.getElementById('fAtk').value||'—';
+      rr(ctx,11,bottomStripY+3,38,statsH-2,3,'rgba(180,50,0,0.22)','#c44020',0.7);
+      ctx.font='9px serif'; ctx.textAlign='left'; ctx.fillText('⚔',13,bottomStripY+statsH-3);
+      txt(ctx,atk,26,bottomStripY+statsH-2,'bold 10px Cinzel,serif',P.text,'center');
+
+      // MOV — right
+      const mov=document.getElementById('fMov').value||'—';
+      rr(ctx,W-49,bottomStripY+3,38,statsH-2,3,'rgba(20,60,160,0.22)','#3a70b0',0.7);
+      ctx.font='9px serif'; ctx.textAlign='left'; ctx.fillText('👣',W-47,bottomStripY+statsH-3);
+      txt(ctx,mov,W-33,bottomStripY+statsH-2,'bold 10px Cinzel,serif',P.text,'center');
+
+      // Heaven's Arena centered between ATK and MOV
+      const midY = bottomStripY + statsH/2 + 1;
+      drawStar(ctx, W/2-38, midY, 4, 2, 5, P.border);
+      txt(ctx,"Heaven's Arena", W/2, midY+4, 'bold 7.5px Cinzel,serif', P.text, 'center', 70);
+      drawStar(ctx, W/2+38, midY, 4, 2, 5, P.border);
+
+    } else {
+      // Spell / Relic / Terrain — footer only (no stats row)
+      rr(ctx,8,bottomStripY,W-16,footerH+4,3,P.namebg);
+      // Mana pips centered left
+      const allPips=[];
+      manaRows.forEach(row=>{
+        const e=MANA_EMOJI[row.color]||'⬡';
+        const bg=MANA_PIP_BG[row.color]||'rgba(60,55,45,0.7)';
+        const bd=MANA_PIP_BORDER[row.color]||'#8a7850';
+        for(let i=0;i<Math.min(row.amt,8);i++) allPips.push({e,bg,bd});
+      });
+      const totalPipW = allPips.length*20;
+      let px = 14;
+      const midY2 = bottomStripY + (footerH+4)/2;
+      allPips.forEach(p=>{ drawManaPip(ctx,p.e,px+8,midY2,p.bg,p.bd); px+=20; });
+
+      // Heaven's Arena right side
+      drawStar(ctx, W-60, midY2, 4, 2, 5, P.border);
+      txt(ctx,"Heaven's Arena", W-50, midY2+4, 'bold 7px Cinzel,serif', P.text, 'left', 50);
+    }
+  } else {
+    // God card footer only
+    rr(ctx,8,bottomStripY,W-16,footerH+4,3,P.namebg);
+    const midY3 = bottomStripY + (footerH+4)/2;
+    drawStar(ctx, W/2-38, midY3, 4, 2, 5, P.border);
+    txt(ctx,"Heaven's Arena", W/2, midY3+4, 'bold 7.5px Cinzel,serif', P.text, 'center', 74);
+    drawStar(ctx, W/2+38, midY3, 4, 2, 5, P.border);
+  }
+
+  // CORNER FILIGREE
+  [[10,10,'tl'],[W-10,10,'tr'],[10,H-10,'bl'],[W-10,H-10,'br']].forEach(([cx,cy,pos])=>{
+    const col=(isGod&&P2&&(pos==='tr'||pos==='br'))?P2.border:P.border;
+    ctx.fillStyle=col; ctx.globalAlpha=.45; ctx.beginPath();
+    if(pos==='tl'){ctx.moveTo(cx,cy);ctx.lineTo(cx+9,cy);ctx.lineTo(cx,cy+9);}
+    else if(pos==='tr'){ctx.moveTo(cx,cy);ctx.lineTo(cx-9,cy);ctx.lineTo(cx,cy+9);}
+    else if(pos==='bl'){ctx.moveTo(cx,cy);ctx.lineTo(cx+9,cy);ctx.lineTo(cx,cy-9);}
+    else{ctx.moveTo(cx,cy);ctx.lineTo(cx-9,cy);ctx.lineTo(cx,cy-9);}
+    ctx.closePath(); ctx.fill(); ctx.globalAlpha=1;
+  });
+
+  // OUTER BORDER
+  rr(ctx,0,0,W,H,13,null,P.art,1.5);
+}
+
+function drawArtPlaceholder(ctx,P,type,x,y,w,h){
+  const cx=x+w/2, cy=y+h/2;
+  circ(ctx,cx,cy,h*.32,P.inner,null,0);
+  ctx.strokeStyle=P.border; ctx.lineWidth=1; ctx.globalAlpha=.35;
+  ctx.beginPath(); ctx.arc(cx,cy,h*.26,0,Math.PI*2); ctx.stroke();
+  ctx.globalAlpha=1;
+  const icons={creature:'⚔',blessed:'✦',spell:'✦',relic:'🛡',terrain:'🌿',god:'★'};
+  ctx.font=`${Math.round(h*.2)}px serif`; ctx.fillStyle=P.text; ctx.globalAlpha=.25;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(icons[type]||'✦',cx,cy);
+  ctx.globalAlpha=.5; ctx.font='italic 8px Crimson Text,serif';
+  ctx.fillText('Upload art above',cx,y+h-7);
+  ctx.globalAlpha=1; ctx.textBaseline='alphabetic'; ctx.textAlign='left';
+}
+function defSub(type){return{creature:'',blessed:'',spell:'Evocation',relic:'Weapon',terrain:'Zone',god:'Olympian'}[type]||'';}
+
+// INIT
+buildManaUI(); onTypeChange(); render();
+</script>
+</body>
+</html>
