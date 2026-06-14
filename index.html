@@ -115,7 +115,7 @@ canvas.main-card{border-radius:13px;box-shadow:0 10px 48px rgba(0,0,0,.8)}
     </label>
     <button class="btn btn-out" onclick="resetCropView()">Reset view</button>
   </div>
-  <div class="crop-hint">Drag to pan · Scroll or use slider to zoom · Move and zoom the image inside the rectangle to fit the card frame</div>
+  <div class="crop-hint">Drag to pan · Scroll or use slider to zoom · The gold rectangle shows exactly what will appear on your card</div>
   <div class="crop-btns">
     <button class="btn btn-gold" onclick="applyCrop()">Apply</button>
     <button class="btn btn-out" onclick="closeCrop()">Cancel</button>
@@ -235,54 +235,31 @@ canvas.main-card{border-radius:13px;box-shadow:0 10px 48px rgba(0,0,0,.8)}
       </div>
     </div>
 
-<div id="blessBlock" style="display:none">
-
-  <div class="r2">
-    <div class="fl">
-      <label>Blessing Current</label>
-      <input id="fBlessNow"
-             type="number"
-             value="0"
-             min="0"
-             max="10"
-             oninput="render()"/>
+    <div id="blessBlock" style="display:none">
+      <div class="r2">
+        <div class="fl"><label>Blessing current</label><input id="fBlessNow" type="number" value="0" min="0" max="10" oninput="render()"/></div>
+        <div class="fl"><label>Blessing max</label><input id="fBlessMax" type="number" value="5" min="1" max="10" oninput="render()"/></div>
+      </div>
+      <!-- BLESSED SPELL SECTION -->
+      <div style="margin-top:10px;padding:10px 12px;background:var(--surf2);border:1px solid var(--bord2);border-radius:6px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:10.5px;font-weight:600;color:var(--gold-lt);text-transform:uppercase;letter-spacing:.07em">&#10022; Blessed Spell</div>
+        <div class="fl">
+          <label>Spell name</label>
+          <input id="fSpellName" type="text" placeholder="Divine Strike" oninput="render()"/>
+        </div>
+        <div class="fl">
+          <label>Spell cost mana</label>
+          <div class="hint" style="margin-bottom:6px">Choose amount + element for each pip. These appear inline on the card next to the spell name.</div>
+          <div class="mana-preview" id="spellManaPreview"></div>
+          <div class="mana-builder" id="spellManaBuilder"></div>
+          <button class="btn btn-out" style="margin-top:6px;font-size:11px;padding:5px 10px" onclick="addSpellManaRow()">+ Add spell mana</button>
+        </div>
+        <div class="fl">
+          <label>Spell effect</label>
+          <textarea id="fSpellEffect" placeholder="Deal 4 damage to target creature. If the target is Blessed, heal 2 HP to this creature instead." oninput="render()" style="min-height:52px"></textarea>
+        </div>
+      </div>
     </div>
-
-    <div class="fl">
-      <label>Blessing Max</label>
-      <input id="fBlessMax"
-             type="number"
-             value="5"
-             min="1"
-             max="10"
-             oninput="render()"/>
-    </div>
-  </div>
-
-  <div class="fl">
-    <label>Blessed Spell Name</label>
-    <input id="fBlessSpellName"
-           type="text"
-           placeholder="Divine Burst"
-           oninput="render()"/>
-  </div>
-
-  <div class="fl">
-    <label>Blessed Spell Cost</label>
-    <input id="fBlessSpellCost"
-           type="text"
-           placeholder="2fire 1light"
-           oninput="render()"/>
-  </div>
-
-  <div class="fl">
-    <label>Blessed Spell Effect</label>
-    <textarea id="fBlessSpellEffect"
-              placeholder="Deal 3 damage to a creature."
-              oninput="render()"></textarea>
-  </div>
-
-</div>
 
     <div id="prayBlock" style="display:none">
       <div class="fl">
@@ -302,16 +279,19 @@ canvas.main-card{border-radius:13px;box-shadow:0 10px 48px rgba(0,0,0,.8)}
         <span class="chip" onclick="addKw('Taunt')">Taunt</span>
         <span class="chip" onclick="addKw('Rush')">Rush</span>
         <span class="chip" onclick="addKw('Stealth')">Stealth</span>
+        <span class="chip" onclick="addKw('Flying')">Flying</span>
         <span class="chip" onclick="addKw('Reach')">Reach</span>
         <span class="chip" onclick="addKw('Lifesteal')">Lifesteal</span>
         <span class="chip" onclick="addKw('Shield X')">Shield X</span>
         <span class="chip" onclick="addKw('Burn X')">Burn X</span>
-        <span class="chip" onclick="addKw('Stun')">Stun</span>
-        <span class="chip" onclick="addKw('Buff (X)')">Channel</span>
-        <span class="chip" onclick="addKw('Resurrect')">Resurrect</span>
-        <span class="chip" onclick="addKw('Splash')">Splash</span>
         <span class="chip" onclick="addKw('Freeze')">Freeze</span>
-        <span class="chip" onclick="addKw('Spell-cast')">SpellCast/span>
+        <span class="chip" onclick="addKw('Stun')">Stun</span>
+        <span class="chip" onclick="addKw('Channel (X)')">Channel</span>
+        <span class="chip" onclick="addKw('Ward')">Ward</span>
+        <span class="chip" onclick="addKw('Resurrect')">Resurrect</span>
+        <span class="chip" onclick="addKw('Impassable')">Impassable</span>
+        <span class="chip" onclick="addKw('Vision Ward')">Vision Ward</span>
+        <span class="chip" onclick="addKw('Overload (X)')">Overload</span>
       </div>
     </div>
     <div class="fl">
@@ -401,6 +381,7 @@ const MANA_PIP_BORDER = {
 let artCanvas = null;
 let gallery = [];
 let manaRows = [{amt:2,color:'fire'},{amt:1,color:'any'}];
+let spellManaRows = [{amt:1,color:'fire'},{amt:1,color:'any'}];
 let prayers = ['Summon 3 creatures of this element.','Destroy 2 enemy creatures.','Cast 2 matching spells.'];
 
 // ═══════════════════════════════════════
@@ -627,6 +608,7 @@ function onTypeChange(){
   document.getElementById('colorDual').style.display=t==='god'?'':'none';
   document.getElementById('manaCostBlock').style.display=t==='god'?'none':'';
   if(t==='god') buildPrayerUI();
+  if(t==='blessed'){ buildSpellManaUI(); updateSpellManaPreview(); }
   render();
 }
 
@@ -650,6 +632,44 @@ function buildManaUI(){
   updateManaPreview();
 }
 function addManaRow(){manaRows.push({amt:1,color:'any'});buildManaUI();render();}
+
+// ─── SPELL MANA BUILDER (blessed creature) ───────────────────────────────────
+function buildSpellManaUI(){
+  const el=document.getElementById('spellManaBuilder');
+  if(!el) return;
+  el.innerHTML='';
+  spellManaRows.forEach((row,i)=>{
+    const div=document.createElement('div'); div.className='mana-row';
+    const opts=['fire','water','earth','thunder','light','dark','mind','undead','any'].map(c=>
+      `<option value="${c}"${row.color===c?' selected':''}>${MANA_EMOJI[c]} ${c.charAt(0).toUpperCase()+c.slice(1)}</option>`
+    ).join('');
+    div.innerHTML=`
+      <input type="number" min="1" max="9" value="${row.amt}" oninput="spellManaRows[${i}].amt=+this.value;updateSpellManaPreview();render()" style="background:#16140f;border:1px solid #3d3828;color:#ede3c8;border-radius:5px;padding:6px 7px;font-size:12px;font-family:Inter,sans-serif"/>
+      <select onchange="spellManaRows[${i}].color=this.value;updateSpellManaPreview();render()" style="background:#16140f;border:1px solid #3d3828;color:#ede3c8;border-radius:5px;padding:6px 7px;font-size:12px;font-family:Inter,sans-serif">${opts}</select>
+      <button class="mana-del" onclick="spellManaRows.splice(${i},1);buildSpellManaUI();updateSpellManaPreview();render()">&#10005;</button>`;
+    el.appendChild(div);
+  });
+  updateSpellManaPreview();
+}
+function addSpellManaRow(){spellManaRows.push({amt:1,color:'any'});buildSpellManaUI();render();}
+function updateSpellManaPreview(){
+  const el=document.getElementById('spellManaPreview');
+  if(!el) return;
+  el.innerHTML='';
+  spellManaRows.forEach(row=>{
+    const e=MANA_EMOJI[row.color]||'⦿';
+    const bg=MANA_PIP_BG[row.color]||'rgba(60,55,45,0.7)';
+    const bd=MANA_PIP_BORDER[row.color]||'#8a7850';
+    for(let i=0;i<Math.min(row.amt,9);i++){
+      const pip=document.createElement('div');
+      pip.className='mpip';
+      pip.style.cssText=`background:${bg};border-color:${bd}`;
+      pip.textContent=e;
+      pip.title=row.color+' mana';
+      el.appendChild(pip);
+    }
+  });
+}
 function updateManaPreview(){
   const el=document.getElementById('manaPreview');
   el.innerHTML='';
@@ -667,35 +687,7 @@ function updateManaPreview(){
     }
   });
 }
-function parseBlessSpellCost(str){
 
-  const pips=[];
-
-  if(!str) return pips;
-
-  str.split(/\s+/).forEach(part=>{
-
-    const m=part.match(/^(\d+)(\w+)$/i);
-
-    if(!m) return;
-
-    const amt=parseInt(m[1]);
-    const color=m[2].toLowerCase();
-
-    for(let i=0;i<amt;i++){
-
-      pips.push({
-        e:MANA_EMOJI[color] || '⬡',
-        bg:MANA_PIP_BG[color] || 'rgba(60,55,45,0.7)',
-        bd:MANA_PIP_BORDER[color] || '#8a7850'
-      });
-
-    }
-
-  });
-
-  return pips;
-}
 // ═══════════════════════════════════════
 // PRAYER UI
 // ═══════════════════════════════════════
@@ -746,6 +738,17 @@ function parseQuick(){
   }
   const rls=lines.filter(l=>l.toLowerCase().startsWith('rules:')).map(l=>l.slice(6).trim());
   if(rls.length)sv('fRules',rls.join('\n'));
+  const spellNameQ=get('spell');if(spellNameQ)sv('fSpellName',spellNameQ);
+  const spellFxQ=get('spelleffect');if(spellFxQ)sv('fSpellEffect',spellFxQ);
+  const spellCostQ=get('spellcost');
+  if(spellCostQ){
+    spellManaRows=[];
+    spellCostQ.split(/\s+/).forEach(part=>{
+      const mc=part.match(/^(\d+)(\w+)$/);
+      if(mc) spellManaRows.push({amt:parseInt(mc[1]),color:mc[2]==='any'?'any':mc[2].toLowerCase()});
+    });
+    buildSpellManaUI();
+  }
   render();
 }
 
@@ -832,11 +835,13 @@ function lighten(hex,amt){
 }
 
 // Draw a single mana emoji pip WITH colored circle on canvas
-function drawManaPip(ctx, emoji, cx, cy, bgColor, borderColor){
-  circ(ctx,cx,cy,9,bgColor,null,0);
+function drawManaPip(ctx, emoji, cx, cy, bgColor, borderColor, radius){
+  const r=radius||9;
+  circ(ctx,cx,cy,r,bgColor,null,0);
   ctx.strokeStyle=borderColor; ctx.lineWidth=1.5;
-  ctx.beginPath(); ctx.arc(cx,cy,9,0,Math.PI*2); ctx.stroke();
-  ctx.font='11px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+  const fs=Math.round(r*1.2);
+  ctx.font=fs+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillText(emoji,cx,cy+1);
   ctx.textBaseline='alphabetic'; ctx.textAlign='left';
 }
@@ -1039,117 +1044,60 @@ function render(){
     txt(ctx,flavor,W/2,flavorY+4,'italic 9px Crimson Text,Georgia,serif','#5a3010','center',W-24);
   }
 
-  // Blessed bar
+  // Blessed bar + spell block
   if(type==='blessed'){
+    // --- blessing progress bar at bottom of text box ---
+    const bn=parseInt(document.getElementById('fBlessNow').value)||0;
+    const bm=parseInt(document.getElementById('fBlessMax').value)||5;
+    const barY=tbY+tbH-10;
+    rr(ctx,11,barY,W-22,6,3,P.art);
+    rr(ctx,11,barY,Math.max(4,(W-22)*Math.min(bn/bm,1)),6,3,P.border);
+    txt(ctx,'Blessing '+bn+'/'+bm,12,barY+5,'6px Inter,sans-serif',P.text,'left');
+    txt(ctx,'Active at '+bm,W-12,barY+5,'6px Inter,sans-serif',P.text,'right',72);
 
-  const spellName =
-    document.getElementById('fBlessSpellName').value
-    || 'Blessed Spell';
+    // --- spell block drawn ABOVE the blessing bar ---
+    const spellName  = (document.getElementById('fSpellName').value||'Blessed Spell').trim();
+    const spellEffect= (document.getElementById('fSpellEffect').value||'').trim();
 
-  const spellEffect =
-    document.getElementById('fBlessSpellEffect').value
-    || '';
+    // collect spell mana pips
+    const spellPips=[];
+    spellManaRows.forEach(row=>{
+      const e=MANA_EMOJI[row.color]||'\u29BF';
+      const bg=MANA_PIP_BG[row.color]||'rgba(60,55,45,0.7)';
+      const bd=MANA_PIP_BORDER[row.color]||'#8a7850';
+      for(let i=0;i<Math.min(row.amt,8);i++) spellPips.push({e,bg,bd});
+    });
 
-  const spellCost =
-    document.getElementById('fBlessSpellCost').value
-    || '';
+    // figure out how many lines the spell effect takes
+    const spellEffectLines = spellEffect ? wrapText(ctx, spellEffect, W-30, 9) : [];
+    const spellBlockH = 10 + 12 + spellEffectLines.length*10 + 6; // header + effect lines + padding
+    const spellBoxY = barY - 4 - spellBlockH;
 
-  const spellPips =
-    parseBlessSpellCost(spellCost);
+    // divider line above spell block
+    ctx.strokeStyle='#9a7040'; ctx.lineWidth=0.5;
+    ctx.beginPath(); ctx.moveTo(11,spellBoxY-3); ctx.lineTo(W-11,spellBoxY-3); ctx.stroke();
 
-  const spellH = 42;
+    // spell name row with mana pips
+    const pipSize=9; const pipGap=11;
+    let pipX=12;
+    // draw pips first
+    spellPips.forEach(p=>{
+      drawManaPip(ctx,p.e,pipX+pipSize/2,spellBoxY+6,p.bg,p.bd,pipSize);
+      pipX+=pipGap;
+    });
+    // spell name after pips
+    const nameAfterPips=spellPips.length>0?12+spellPips.length*pipGap+3:12;
+    ctx.font='bold 9px Crimson Text,Georgia,serif';
+    ctx.fillStyle=P.tag;
+    ctx.fillText(spellName,nameAfterPips,spellBoxY+9);
 
-  const spellY =
-    tbY + tbH - spellH - 4;
-
-  ctx.strokeStyle='#9a7040';
-  ctx.lineWidth=0.5;
-
-  ctx.beginPath();
-  ctx.moveTo(11,spellY-4);
-  ctx.lineTo(W-11,spellY-4);
-  ctx.stroke();
-
-  rr(
-    ctx,
-    11,
-    spellY,
-    W-22,
-    spellH,
-    3,
-    'rgba(255,255,255,0.12)',
-    P.border,
-    0.7
-  );
-
-  txt(
-    ctx,
-    '✦ ' + spellName,
-    15,
-    spellY + 10,
-    'bold 8px Cinzel,serif',
-    P.text
-  );
-
-let px = W - 18;
-
-spellPips.reverse().forEach(p=>{
-
-  ctx.save();
-
-  // mini mana pip
-  ctx.beginPath();
-  ctx.arc(px, spellY + 9, 5, 0, Math.PI * 2);
-
-  ctx.fillStyle = p.bg;
-  ctx.fill();
-
-  ctx.lineWidth = 0.8;
-  ctx.strokeStyle = p.bd;
-  ctx.stroke();
-
-  ctx.font = '6px Segoe UI Emoji';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#fff';
-
-  ctx.fillText(
-    p.e,
-    px,
-    spellY + 9
-  );
-
-  ctx.restore();
-
-  px -= 11;
-
-});
-
-  const lines =
-    wrapText(
-      ctx,
-      spellEffect,
-      W-40,
-      8
-    );
-
-  let ly=spellY+22;
-
-  lines.slice(0,2).forEach(line=>{
-
-    txt(
-      ctx,
-      line,
-      15,
-      ly,
-      '8px Crimson Text,serif',
-      '#2a1200'
-    );
-
-    ly+=9;
-
-  });
-}
+    // spell effect lines
+    let sly=spellBoxY+20;
+    spellEffectLines.forEach(line=>{
+      txt(ctx,line,12,sly,'9px Crimson Text,Georgia,serif','#2a1200','left',W-24);
+      sly+=10;
+    });
+  }
 
   // ════════════════════════════
   // STATS BAR + FOOTER (combined bottom strip for creatures)
@@ -1242,7 +1190,7 @@ function drawArtPlaceholder(ctx,P,type,x,y,w,h){
 function defSub(type){return{creature:'',blessed:'',spell:'Evocation',relic:'Weapon',terrain:'Zone',god:'Olympian'}[type]||'';}
 
 // INIT
-buildManaUI(); onTypeChange(); render();
+buildManaUI(); buildSpellManaUI(); onTypeChange(); render();
 </script>
 </body>
 </html>
