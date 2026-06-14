@@ -1097,17 +1097,18 @@ spellPips.reverse().forEach(p=>{
 
   ctx.save();
 
+  // mini mana pip
   ctx.beginPath();
-  ctx.arc(px, spellY + 9, 6, 0, Math.PI * 2);
+  ctx.arc(px, spellY + 9, 5, 0, Math.PI * 2);
 
   ctx.fillStyle = p.bg;
   ctx.fill();
 
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 0.8;
   ctx.strokeStyle = p.bd;
   ctx.stroke();
 
-  ctx.font = '7px Segoe UI Emoji';
+  ctx.font = '6px Segoe UI Emoji';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#fff';
@@ -1120,7 +1121,7 @@ spellPips.reverse().forEach(p=>{
 
   ctx.restore();
 
-  px -= 13;
+  px -= 11;
 
 });
 
