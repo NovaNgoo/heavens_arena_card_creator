@@ -161,6 +161,7 @@ canvas.main-card{border-radius:13px;box-shadow:0 10px 48px rgba(0,0,0,.8)}
       <select id="fType" onchange="onTypeChange()">
         <option value="creature">Creature</option>
         <option value="blessed">Blessed Creature</option>
+        <option value="avatar">Avatar</option>
         <option value="spell">Spell</option>
         <option value="relic">Relic</option>
         <option value="terrain">Terrain</option>
@@ -249,7 +250,7 @@ canvas.main-card{border-radius:13px;box-shadow:0 10px 48px rgba(0,0,0,.8)}
         </div>
         <div class="fl">
           <label>Spell cost mana</label>
-          <div class="hint" style="margin-bottom:6px">Choose amount + element for each pip. These appear inline on the card next to the spell name.</div>
+          <div class="hint" style="margin-bottom:6px">Choose amount + element for each pip. These appear as small icons to the right of the spell name.</div>
           <div class="mana-preview" id="spellManaPreview"></div>
           <div class="mana-builder" id="spellManaBuilder"></div>
           <button class="btn btn-out" style="margin-top:6px;font-size:11px;padding:5px 10px" onclick="addSpellManaRow()">+ Add spell mana</button>
@@ -271,7 +272,9 @@ canvas.main-card{border-radius:13px;box-shadow:0 10px 48px rgba(0,0,0,.8)}
 
     <div class="fl">
       <label>Rules text</label>
-      <textarea id="fRules" placeholder="Taunt — Enemies must attack this creature first.&#10;Smite (2) — Deal 3 damage to one target." oninput="render()"></textarea>
+      <div class="hint">Each entry is its own line on the card. Long text wraps automatically &mdash; use &ldquo;New line&rdquo; to force a break onto the next line.</div>
+      <div id="rulesLines" style="display:flex;flex-direction:column;gap:5px"></div>
+      <button class="btn btn-out" style="margin-top:5px;font-size:11px;padding:5px 10px" onclick="addRulesLine()">&#8629; New line on card</button>
     </div>
     <div class="fl">
       <label>Quick keywords</label>
@@ -383,6 +386,7 @@ let gallery = [];
 let manaRows = [{amt:2,color:'fire'},{amt:1,color:'any'}];
 let spellManaRows = [{amt:1,color:'fire'},{amt:1,color:'any'}];
 let prayers = ['Summon 3 creatures of this element.','Destroy 2 enemy creatures.','Cast 2 matching spells.'];
+let rulesData = [''];  // each element = one explicit line on the card
 
 // ═══════════════════════════════════════
 // CROP / PAN / ZOOM STATE
@@ -601,14 +605,14 @@ function switchTab(id,btn){
 // ═══════════════════════════════════════
 function onTypeChange(){
   const t=document.getElementById('fType').value;
-  document.getElementById('statBlock').style.display=['creature','blessed'].includes(t)?'':'none';
-  document.getElementById('blessBlock').style.display=t==='blessed'?'':'none';
+  document.getElementById('statBlock').style.display=['creature','blessed','avatar'].includes(t)?'':'none';
+  document.getElementById('blessBlock').style.display=['blessed','avatar'].includes(t)?'':'none';
   document.getElementById('prayBlock').style.display=t==='god'?'':'none';
   document.getElementById('colorSingle').style.display=t==='god'?'none':'';
   document.getElementById('colorDual').style.display=t==='god'?'':'none';
-  document.getElementById('manaCostBlock').style.display=t==='god'?'none':'';
+  document.getElementById('manaCostBlock').style.display=(t==='god')?'none':'';
   if(t==='god') buildPrayerUI();
-  if(t==='blessed'){ buildSpellManaUI(); updateSpellManaPreview(); }
+  if(['blessed','avatar'].includes(t)){ buildSpellManaUI(); updateSpellManaPreview(); }
   render();
 }
 
@@ -703,13 +707,47 @@ function buildPrayerUI(){
 }
 function addPrayer(){prayers.push('New prayer quest.');buildPrayerUI();render();}
 
+// ─── RULES LINE EDITOR ──────────────────────────────────────────────────────
+function buildRulesUI(){
+  const el=document.getElementById('rulesLines');
+  if(!el) return;
+  el.innerHTML='';
+  rulesData.forEach((line,i)=>{
+    const row=document.createElement('div');
+    row.style.cssText='display:grid;grid-template-columns:1fr auto;gap:5px;align-items:center';
+    const inp=document.createElement('input');
+    inp.type='text'; inp.value=line;
+    inp.placeholder=i===0?'Taunt — Enemies must attack first.':'Next rule line...';
+    inp.style.cssText='background:#1d1b17;border:1px solid #2e2a22;color:#ede3c8;border-radius:5px;padding:7px 9px;font-size:12.5px;font-family:Inter,sans-serif;width:100%';
+    inp.oninput=()=>{rulesData[i]=inp.value;render();};
+    inp.onfocus=()=>{inp.style.borderColor='#c9921a';};
+    inp.onblur=()=>{inp.style.borderColor='#2e2a22';};
+    const del=document.createElement('button');
+    del.textContent='✕';
+    del.style.cssText='background:none;border:1px solid #2e2a22;color:#7a7060;border-radius:4px;width:28px;height:32px;cursor:pointer;font-size:12px;flex-shrink:0';
+    del.onmouseenter=()=>{del.style.borderColor='#A32D2D';del.style.color='#f09595';};
+    del.onmouseleave=()=>{del.style.borderColor='#2e2a22';del.style.color='#7a7060';};
+    del.onclick=()=>{if(rulesData.length>1)rulesData.splice(i,1);else rulesData[0]='';buildRulesUI();render();};
+    row.appendChild(inp); row.appendChild(del);
+    el.appendChild(row);
+  });
+}
+function addRulesLine(){rulesData.push('');buildRulesUI();
+  const inputs=document.querySelectorAll('#rulesLines input');
+  if(inputs.length){inputs[inputs.length-1].focus();}
+  render();
+}
+
 // ═══════════════════════════════════════
 // KEYWORDS
 // ═══════════════════════════════════════
 function addKw(kw){
-  const el=document.getElementById('fRules');
-  el.value=(el.value.trim()?el.value.trim()+'\n':'')+kw+' — ';
-  render(); el.focus();
+  const last=rulesData[rulesData.length-1];
+  if(last.trim()==='') rulesData[rulesData.length-1]=kw+' — ';
+  else rulesData.push(kw+' — ');
+  buildRulesUI(); render();
+  const inputs=document.querySelectorAll('#rulesLines input');
+  if(inputs.length) inputs[inputs.length-1].focus();
 }
 
 // ═══════════════════════════════════════
@@ -737,7 +775,7 @@ function parseQuick(){
     buildManaUI();
   }
   const rls=lines.filter(l=>l.toLowerCase().startsWith('rules:')).map(l=>l.slice(6).trim());
-  if(rls.length)sv('fRules',rls.join('\n'));
+  if(rls.length){rulesData=rls.slice();buildRulesUI();}
   const spellNameQ=get('spell');if(spellNameQ)sv('fSpellName',spellNameQ);
   const spellFxQ=get('spelleffect');if(spellFxQ)sv('fSpellEffect',spellFxQ);
   const spellCostQ=get('spellcost');
@@ -756,7 +794,8 @@ function parseQuick(){
 // RESET
 // ═══════════════════════════════════════
 function resetForm(){
-  ['fName','fSub','fRules','fFlavor'].forEach(id=>document.getElementById(id).value='');
+  ['fName','fSub','fFlavor'].forEach(id=>document.getElementById(id).value='');
+  rulesData=[''];buildRulesUI();
   ['fAtk','fHp'].forEach(id=>document.getElementById(id).value=4);
   document.getElementById('fMov').value=2;
   document.getElementById('fLevel').value=1;
@@ -862,7 +901,7 @@ function rulesLines(rules,ctx,maxW){
   if(!rules)return[];
   const result=[];
   rules.split('\n').forEach(line=>{
-    wrapText(ctx,line,maxW,10).forEach((l,i)=>result.push({text:l,first:i===0}));
+    wrapText(ctx,line,maxW,12).forEach((l,i)=>result.push({text:l,first:i===0}));
   });
   return result;
 }
@@ -925,7 +964,7 @@ function render(){
   rr(ctx,8,artY,W-16,artH,4,null,P.border,0.8);
 
   // HP badge top-right on art (creatures)
-  if(!isGod&&['creature','blessed'].includes(type)){
+  if(!isGod&&['creature','blessed','avatar'].includes(type)){
     const hp=document.getElementById('fHp').value||'—';
     rr(ctx,W-36,artY+4,28,22,4,P.inner,P.border,1);
     txt(ctx,'HP',W-22,artY+12,'bold 6px Cinzel,serif',P.text,'center');
@@ -968,7 +1007,7 @@ function render(){
   const sub=document.getElementById('fSub').value||defSub(type);
   const cname=color.charAt(0).toUpperCase()+color.slice(1);
   let typeLine='';
-  if(['creature','blessed'].includes(type)){
+  if(['creature','blessed','avatar'].includes(type)){
     const ct=document.getElementById('fCreatureType').value;
     const lv=document.getElementById('fLevel').value;
     typeLine=`${cname} ${ct.charAt(0).toUpperCase()+ct.slice(1)}${sub?' · '+sub:''} · Lv ${lv}`;
@@ -990,7 +1029,7 @@ function render(){
   rr(ctx,8,tbY,W-16,tbH,3,null,P.art,0.7);
 
   // type tag pill
-  const tagLabel=({creature:'Creature',blessed:'Blessed Creature',spell:'Spell',relic:'Relic',terrain:'Terrain',god:'God Card'})[type]||type;
+  const tagLabel=({creature:'Creature',blessed:'Blessed Creature',avatar:'Avatar',spell:'Spell',relic:'Relic',terrain:'Terrain',god:'God Card'})[type]||type;
   ctx.font='bold 6px Inter,sans-serif';
   const tgW=ctx.measureText(tagLabel.toUpperCase()).width+12;
   rr(ctx,11,tbY+4,tgW,10,2,P.tag);
@@ -1013,26 +1052,27 @@ function render(){
   }
 
   // Rules text
-  const rules=document.getElementById('fRules').value;
+  const RULE_FS=12, RULE_LH=13;
+  const rules=rulesData.join('\n');
   const rl=rulesLines(rules,ctx,W-28);
   let ry=textStartY;
   rl.forEach(line=>{
-    if(ry>tbY+tbH-18) return;
+    if(ry>tbY+tbH-16) return;
     const dashIdx=line.text.indexOf(' — ');
     if(line.first&&dashIdx>0){
       const kw=line.text.slice(0,dashIdx);
       const rest=line.text.slice(dashIdx);
-      ctx.font='bold 10px Crimson Text,Georgia,serif';
+      ctx.font='bold '+RULE_FS+'px Crimson Text,Georgia,serif';
       ctx.fillStyle=P.tag;
       const kwW=ctx.measureText(kw).width;
       ctx.fillText(kw,12,ry);
-      ctx.font='10px Crimson Text,Georgia,serif';
+      ctx.font=RULE_FS+'px Crimson Text,Georgia,serif';
       ctx.fillStyle='#2a1200';
       ctx.fillText(rest,12+kwW,ry);
     } else {
-      txt(ctx,line.text,12,ry,'10px Crimson Text,Georgia,serif','#2a1200','left',W-24);
+      txt(ctx,line.text,12,ry,RULE_FS+'px Crimson Text,Georgia,serif','#2a1200','left',W-24);
     }
-    ry+=11;
+    ry+=RULE_LH;
   });
 
   // Flavor text
@@ -1045,7 +1085,7 @@ function render(){
   }
 
   // Blessed bar + spell block
-  if(type==='blessed'){
+  if(type==='blessed'||type==='avatar'){
     // --- blessing progress bar at bottom of text box ---
     const bn=parseInt(document.getElementById('fBlessNow').value)||0;
     const bm=parseInt(document.getElementById('fBlessMax').value)||5;
@@ -1056,7 +1096,7 @@ function render(){
     txt(ctx,'Active at '+bm,W-12,barY+5,'6px Inter,sans-serif',P.text,'right',72);
 
     // --- spell block drawn ABOVE the blessing bar ---
-    const spellName  = (document.getElementById('fSpellName').value||'Blessed Spell').trim();
+    const spellName  = (document.getElementById('fSpellName').value||(type==='avatar'?'Avatar Spell':'Blessed Spell')).trim();
     const spellEffect= (document.getElementById('fSpellEffect').value||'').trim();
 
     // collect spell mana pips
@@ -1077,19 +1117,23 @@ function render(){
     ctx.strokeStyle='#9a7040'; ctx.lineWidth=0.5;
     ctx.beginPath(); ctx.moveTo(11,spellBoxY-3); ctx.lineTo(W-11,spellBoxY-3); ctx.stroke();
 
-    // spell name row with mana pips
-    const pipSize=9; const pipGap=11;
-    let pipX=10;
-    // draw pips first
-    spellPips.forEach(p=>{
-      drawManaPip(ctx,p.e,pipX+pipSize/2,spellBoxY+6,p.bg,p.bd,pipSize);
-      pipX+=pipGap;
-    });
-    // spell name after pips
-    const nameAfterPips=spellPips.length>0?12+spellPips.length*pipGap+3:12;
-    ctx.font='bold 9px Crimson Text,Georgia,serif';
-    ctx.fillStyle=P.tag;
-    ctx.fillText(spellName,nameAfterPips,spellBoxY+9);
+    // spell name on the left; small mana pips right-aligned beside it
+    const pipR=6, pipGap=13;
+    const nPips=spellPips.length;
+    // reserve room on the right for the pips so the name truncates instead of overlapping
+    let nameMaxW;
+    if(nPips>0){
+      const firstCenter=(W-12-pipR)-(nPips-1)*pipGap; // leftmost pip center
+      nameMaxW=firstCenter-pipR-6-12;
+    } else {
+      nameMaxW=W-24;
+    }
+    txt(ctx,spellName,12,spellBoxY+9,'bold 9px Crimson Text,Georgia,serif',P.tag,'left',nameMaxW);
+    // pips drawn smaller, ending flush with the right edge
+    for(let i=0;i<nPips;i++){
+      const cx=(W-12-pipR)-(nPips-1-i)*pipGap;
+      drawManaPip(ctx,spellPips[i].e,cx,spellBoxY+6,spellPips[i].bg,spellPips[i].bd,pipR);
+    }
 
     // spell effect lines
     let sly=spellBoxY+20;
@@ -1106,7 +1150,7 @@ function render(){
   const bottomStripY = H - statsH - footerH - 4;
 
   if(!isGod){
-    if(['creature','blessed'].includes(type)){
+    if(['creature','blessed','avatar'].includes(type)){
       // Single strip combining stats + branding
       const stripH = statsH + footerH;
       rr(ctx,8,bottomStripY,W-16,stripH,3,P.namebg);
@@ -1130,24 +1174,12 @@ function render(){
       drawStar(ctx, W/2+38, midY, 4, 2, 5, P.border);
 
     } else {
-      // Spell / Relic / Terrain — footer only (no stats row)
+      // Spell / Relic / Terrain — footer = branding only (mana cost shows once, on the name bar)
       rr(ctx,8,bottomStripY,W-16,footerH+4,3,P.namebg);
-      // Mana pips centered left
-      const allPips=[];
-      manaRows.forEach(row=>{
-        const e=MANA_EMOJI[row.color]||'⬡';
-        const bg=MANA_PIP_BG[row.color]||'rgba(60,55,45,0.7)';
-        const bd=MANA_PIP_BORDER[row.color]||'#8a7850';
-        for(let i=0;i<Math.min(row.amt,8);i++) allPips.push({e,bg,bd});
-      });
-      const totalPipW = allPips.length*20;
-      let px = 14;
       const midY2 = bottomStripY + (footerH+4)/2;
-      allPips.forEach(p=>{ drawManaPip(ctx,p.e,px+8,midY2,p.bg,p.bd); px+=20; });
-
-      // Heaven's Arena right side
-      drawStar(ctx, W-60, midY2, 4, 2, 5, P.border);
-      txt(ctx,"Heaven's Arena", W-50, midY2+4, 'bold 7px Cinzel,serif', P.text, 'left', 50);
+      drawStar(ctx, W/2-38, midY2, 4, 2, 5, P.border);
+      txt(ctx,"Heaven's Arena", W/2, midY2+4, 'bold 7.5px Cinzel,serif', P.text, 'center', 70);
+      drawStar(ctx, W/2+38, midY2, 4, 2, 5, P.border);
     }
   } else {
     // God card footer only
@@ -1179,7 +1211,7 @@ function drawArtPlaceholder(ctx,P,type,x,y,w,h){
   ctx.strokeStyle=P.border; ctx.lineWidth=1; ctx.globalAlpha=.35;
   ctx.beginPath(); ctx.arc(cx,cy,h*.26,0,Math.PI*2); ctx.stroke();
   ctx.globalAlpha=1;
-  const icons={creature:'⚔',blessed:'✦',spell:'✦',relic:'🛡',terrain:'🌿',god:'★'};
+  const icons={creature:'⚔',blessed:'✦',avatar:'✧',spell:'✦',relic:'🛡',terrain:'🌿',god:'★'};
   ctx.font=`${Math.round(h*.2)}px serif`; ctx.fillStyle=P.text; ctx.globalAlpha=.25;
   ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillText(icons[type]||'✦',cx,cy);
@@ -1187,10 +1219,10 @@ function drawArtPlaceholder(ctx,P,type,x,y,w,h){
   ctx.fillText('Upload art above',cx,y+h-7);
   ctx.globalAlpha=1; ctx.textBaseline='alphabetic'; ctx.textAlign='left';
 }
-function defSub(type){return{creature:'',blessed:'',spell:'Evocation',relic:'Weapon',terrain:'Zone',god:'Olympian'}[type]||'';}
+function defSub(type){return{creature:'',blessed:'',avatar:'Avatar',spell:'Evocation',relic:'Weapon',terrain:'Zone',god:'Olympian'}[type]||'';}
 
 // INIT
-buildManaUI(); buildSpellManaUI(); onTypeChange(); render();
+buildManaUI(); buildSpellManaUI(); buildRulesUI(); onTypeChange(); render();
 </script>
 </body>
 </html>
